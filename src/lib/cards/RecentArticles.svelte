@@ -1,27 +1,38 @@
 <script lang="ts">
-    import { parsePlainText } from '$lib/articleParser';
-  import { wikiKind } from '$lib/consts';
-  import { ndk } from '$lib/ndk';
-  import type { TabType } from '$lib/types';
-  import type { NDKEvent } from '@nostr-dev-kit/ndk';
+  import { parsePlainText } from '$lib/articleParser';
   import { onMount } from 'svelte';
+  import {
+    type TaggedNostrEvent,
+    type StoreSnapshot,
+    NoteCollection,
+    RequestBuilder,
+    EventKind
+  } from '@snort/system';
 
-  let results: NDKEvent[] = [];
+  import { system, wikiKind } from '$lib/nostr';
+  import type { TabType } from '$lib/types';
+
+  let results: TaggedNostrEvent[] = [];
   export let createChild: (type: TabType, data: string) => void;
 
-  async function search() {
-    results = [];
-    const filter = { kinds: [wikiKind], limit: 24 };
-    const events = await $ndk.fetchEvents(filter);
-    if (!events) {
-      results = [];
-      return;
-    }
-    results = Array.from(events);
-  }
+  onMount(() => {
+    const rb = new RequestBuilder('recent');
+    rb.withFilter()
+      .kinds([wikiKind as EventKind])
+      .limit(12);
 
-  onMount(async () => {
-    await search();
+    const q = system.Query(NoteCollection, rb);
+    const release = q.feed.hook(() => {
+      const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
+      if (state.data) {
+        results = state.data.concat();
+      }
+    });
+
+    return () => {
+      release();
+      q.cancel();
+    };
   });
 </script>
 
@@ -46,11 +57,7 @@
         <!-- {#if result.tags.find((e) => e[0] == "published_at")}
                 on {formatDate(result.tags.find((e) => e[0] == "published_at")[1])}
                 {/if} -->
-        {#await result.author?.fetchProfile()}
-          by <span class="text-gray-600 font-[600]">...</span>
-        {:then result}
-          by {result !== null && JSON.parse(Array.from(result)[0]?.content)?.name}
-        {/await}
+        by <span class="text-gray-600 font-[600]">{result.pubkey}</span>
       </p>
       <p class="text-xs">
         {#if result.tags.find((e) => e[0] == 'summary')?.[0] && result.tags.find((e) => e[0] == 'summary')?.[1]}
@@ -61,7 +68,9 @@
               192
             )}{#if String(result.tags.find((e) => e[0] == 'summary')?.[1])?.length > 192}...{/if}
         {:else}
-          {result.content.length <= 192 ? parsePlainText(result.content.slice(0, 189)) : parsePlainText(result.content.slice(0, 189)) + '...'}
+          {result.content.length <= 192
+            ? parsePlainText(result.content.slice(0, 189))
+            : parsePlainText(result.content.slice(0, 189)) + '...'}
         {/if}
       </p>
     </div>

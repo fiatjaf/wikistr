@@ -1,6 +1,11 @@
 <script lang="ts">
-  import { ndk, wikiKind } from '$lib/nostr';
-  import type { NDKEvent } from '@nostr-dev-kit/ndk';
+  import {
+    NoteCollection,
+    RequestBuilder,
+    type TaggedNostrEvent,
+    type StoreSnapshot
+  } from '@snort/system';
+  import { system, wikiKind } from '$lib/nostr';
   import { onMount } from 'svelte';
   import type { TabType } from '$lib/types';
   import { createChildEverywhere } from '$lib/state';
@@ -9,24 +14,31 @@
   export let query: string;
   export let replaceSelf: (newType: TabType, newData: string) => void;
   export let createChild: (type: TabType, data: string) => void;
-  let results: NDKEvent[] = [];
-  let tried = 0;
+  let results: TaggedNostrEvent[] = [];
+  let tried = false;
 
-  async function search(query: string) {
-    results = [];
-    const filter = { kinds: [wikiKind], '#d': [query] };
-    const events = await ndk.fetchEvents(filter);
-    if (!events) {
-      tried = 1;
-      results = [];
-      return;
-    }
-    tried = 1;
-    results = Array.from(events);
-  }
+  onMount(() => {
+    const rb = new RequestBuilder('article-search');
+    rb.withFilter().kinds([wikiKind]).tag('d', [query, query.toLowerCase()]).limit(25);
 
-  onMount(async () => {
-    await search(query);
+    const q = system.Query(NoteCollection, rb);
+    const release = q.feed.hook(() => {
+      const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
+      if (state.data) {
+        results = state.data.concat();
+      }
+    });
+
+    setTimeout(() => {
+      if (results.length === 0) {
+        tried = true;
+      }
+    }, 1000);
+
+    return () => {
+      release();
+      q.cancel();
+    };
   });
 </script>
 
@@ -34,7 +46,7 @@
   <div class="prose">
     <h1 class="mb-0">{query}</h1>
     <p class="mt-0 mb-0">
-      There are {#if tried == 1}{results.length}{:else}...{/if} articles with the name "{query}"
+      There are {#if tried}{results.length}{:else}...{/if} articles with the name "{query}"
     </p>
   </div>
   {#each results as result}
@@ -58,11 +70,7 @@
         <!-- {#if result.tags.find((e) => e[0] == "published_at")}
               on {formatDate(result.tags.find((e) => e[0] == "published_at")[1])}
               {/if} -->
-        {#await result.author?.fetchProfile()}
-          by <span class="text-gray-600 font-[600]">...</span>
-        {:then result}
-          by {result !== null && JSON.parse(Array.from(result)[0]?.content)?.name}
-        {/await}
+        by <span class="text-gray-600 font-[600]">{result.pubkey}</span>
       </p>
       <p class="text-xs">
         {#if result.tags.find((e) => e[0] == 'summary')?.[0] && result.tags.find((e) => e[0] == 'summary')?.[1]}
@@ -78,7 +86,7 @@
       </p>
     </div>
   {/each}
-  {#if tried == 1}
+  {#if tried}
     <div class="px-4 py-5 bg-white border border-gray-300 rounded-lg mt-2 min-h-[48px]">
       <p class="mb-2">
         {results.length < 1 ? "Can't find this article" : "Didn't find what you are looking for?"}

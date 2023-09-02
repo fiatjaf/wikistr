@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { ndk } from '$lib/nostr';
+  import { NostrEvent, NoteCollection, RequestBuilder } from '@snort/system';
+  import { system } from '$lib/nostr';
   import { afterUpdate, onMount } from 'svelte';
-  import type { NDKEvent } from '@nostr-dev-kit/ndk';
   import { formatDate } from '$lib/utils';
   import { parse } from '$lib/articleParser.js';
   import type { TabType } from '$lib/types';
@@ -11,7 +11,7 @@
   export let eventid: string;
   export let createChild: (type: TabType, data: string) => void;
   export let replaceSelf: (newType: TabType, newData: string) => void;
-  let event: NDKEvent | null = null;
+  let event: NostrEvent | null = null;
   let copied = false;
 
   function addClickListenerToWikilinks() {
@@ -33,8 +33,17 @@
     }, 2500);
   }
 
-  onMount(async () => {
-    event = await ndk.fetchEvent(eventid);
+  onMount(() => {
+    const rb = new RequestBuilder('specific-article');
+    rb.withFilter().ids([eventid]);
+
+    const q = system.Query(NoteCollection, rb);
+    q.onEvent = (_, evt) => {
+      event = evt;
+      q.cancel();
+    };
+
+    return () => q.cancel();
   });
 
   afterUpdate(() => {
@@ -56,13 +65,7 @@
         {/if}
       </h1>
       <span>
-        {#await event.author?.fetchProfile()}
-          by <a href={`nostr:${event.author.npub}`}>...</a>,
-        {:then profile}
-          by <a href={`nostr:${event.author.npub}`}
-            >{profile !== null && JSON.parse(Array.from(profile)[0]?.content)?.name}</a
-          >,
-        {/await}
+        by <span class="text-gray-600 font-[600]">{event.pubkey}</span>
         {#if event.created_at}
           updated on {formatDate(event.created_at)}
         {/if}

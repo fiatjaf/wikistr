@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { ndk, wikiKind } from '$lib/nostr';
-  import { NDKEvent } from '@nostr-dev-kit/ndk';
+  import { EventBuilder } from '@snort/system';
+  import { signer, system, wikiKind } from '$lib/nostr';
 
   export let startTitle: undefined | string;
   export let startSummary: undefined | string;
@@ -29,13 +29,15 @@
 
   async function publish() {
     try {
-      let event = new NDKEvent(ndk);
-      event.kind = wikiKind;
-      event.content = articleContent;
-      event.tags.push(['d', articleTitle.toLowerCase().replaceAll(' ', '-')]);
-      event.tags.push(['title', articleTitle]);
-      event.tags.push(['summary', articleSummary]);
-      await event.publish();
+      let event = await new EventBuilder()
+        .kind(wikiKind)
+        .content(articleContent)
+        .tag(['d', articleTitle.toLowerCase().replaceAll(' ', '-')])
+        .tag(['title', articleTitle])
+        .tag(['summary', articleSummary])
+        .buildAndSign(signer);
+
+      system.BroadcastEvent(event);
       success = 1;
     } catch (err) {
       console.log('failed to publish event', error);
