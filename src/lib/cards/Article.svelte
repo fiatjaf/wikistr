@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ndk } from '$lib/ndk';
+  import { ndk } from '$lib/nostr';
   import { afterUpdate, onMount } from 'svelte';
   import type { NDKEvent } from '@nostr-dev-kit/ndk';
   import { formatDate } from '$lib/utils';
@@ -16,7 +16,6 @@
 
   function addClickListenerToWikilinks() {
     const elements = document.querySelectorAll('[id^="wikilink-v0-"]');
-
     elements.forEach((element) => {
       element.addEventListener('click', () => {
         //alert(`Clicked element with ID: ${element.id}`);
@@ -35,7 +34,7 @@
   }
 
   onMount(async () => {
-    event = await $ndk.fetchEvent(eventid);
+    event = await ndk.fetchEvent(eventid);
   });
 
   afterUpdate(() => {
@@ -67,6 +66,7 @@
         {#if event.created_at}
           updated on {formatDate(event.created_at)}
         {/if}
+        <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
         &nbsp;• &nbsp;<a
           class="cursor-pointer"
           on:click={() => {

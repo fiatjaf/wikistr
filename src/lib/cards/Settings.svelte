@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { browser } from '$app/environment';
-  import { standardRelays } from '$lib/consts';
+  import { getStaticRelays, saveStaticRelays } from '$lib/nostr';
 
-  let relays: string[] = [];
+  let relays = getStaticRelays();
   let newRelay = '';
 
   function removeRelay(index: number) {
@@ -20,14 +19,10 @@
 
   function saveData() {
     addRelay();
-    localStorage.setItem('wikinostr_relays', JSON.stringify(relays));
+    saveStaticRelays(relays);
     setTimeout(() => {
       window.location.href = '';
     }, 1);
-  }
-
-  if (browser) {
-    relays = JSON.parse(localStorage.getItem('wikinostr_relays') || JSON.stringify(standardRelays));
   }
 </script>
 

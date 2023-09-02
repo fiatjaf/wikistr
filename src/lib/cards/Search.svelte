@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { ndk } from '$lib/ndk';
-  import { wikiKind } from '$lib/consts';
+  import { ndk, wikiKind } from '$lib/nostr';
   import type { NDKEvent } from '@nostr-dev-kit/ndk';
   import { onMount } from 'svelte';
   import type { TabType } from '$lib/types';
@@ -16,7 +15,7 @@
   async function search(query: string) {
     results = [];
     const filter = { kinds: [wikiKind], '#d': [query] };
-    const events = await $ndk.fetchEvents(filter);
+    const events = await ndk.fetchEvents(filter);
     if (!events) {
       tried = 1;
       results = [];
