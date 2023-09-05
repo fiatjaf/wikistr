@@ -13,7 +13,8 @@ export function getStaticRelays(): string[] {
     'wss://nostr.mom',
     'wss://relay.damus.io',
     'wss://nostr-pub.wellorder.net',
-    'wss://relay.nostr.band'
+    'wss://relay.nostr.band',
+    'wss://relay.primal.net'
   ];
 }
 
