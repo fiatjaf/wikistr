@@ -1,39 +1,29 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { nip19 } from 'nostr-tools';
-  import { NoteCollection, RequestBuilder, type StoreSnapshot } from '@snort/system';
+  import type { MetadataCache } from '@snort/system';
 
   import { system } from '$lib/nostr';
 
   export let pubkey: string;
-  let metadata: { name: string; picture: string };
+  let metadata: MetadataCache;
   let npub = nip19.npubEncode(pubkey);
 
   $: name = metadata?.name || npub.slice(0, 11);
 
   onMount(() => {
-    const rb = new RequestBuilder(`user:${pubkey.slice(-8)}`);
-    rb.withFilter().kinds([0]).authors([pubkey]);
+    system.ProfileLoader.TrackMetadata(pubkey);
 
-    const q = system.Query(NoteCollection, rb);
-    const release = q.feed.hook(() => {
-      const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
-      if (state.data?.length) {
-        try {
-          metadata = JSON.parse(state.data[0].content);
-          cancel();
-        } catch (err) {
-          /***/
-        }
+    const release = system.ProfileLoader.Cache.hook(() => {
+      let val = system.ProfileLoader.Cache.getFromCache(pubkey);
+      if (val) {
+        metadata = val;
       }
-    });
-
-    function cancel() {
+      system.ProfileLoader.UntrackMetadata(pubkey);
       release();
-      q.cancel();
-    }
+    }, pubkey);
 
-    return cancel;
+    return release;
   });
 </script>
 
