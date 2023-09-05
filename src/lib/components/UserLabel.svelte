@@ -10,6 +10,7 @@
   let npub = nip19.npubEncode(pubkey);
 
   $: name = metadata?.name || npub.slice(0, 11);
+  $: picture = metadata?.picture;
 
   onMount(() => {
     system.ProfileLoader.TrackMetadata(pubkey);
@@ -27,4 +28,9 @@
   });
 </script>
 
-<span class="text-gray-600 font-[600]" title={npub}>{name}</span>
+<div class="inline-flex items-center h-3">
+  {#if picture}
+    <img src={picture} class="h-full ml-1" alt="user avatar" />&nbsp;
+  {/if}
+  <span class="text-gray-600 font-[600]" title={npub}>{name}</span>
+</div>

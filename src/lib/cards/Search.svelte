@@ -32,6 +32,7 @@
       const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
       if (state.data) {
         results = state.data.concat();
+        tried = true;
       }
     });
 
