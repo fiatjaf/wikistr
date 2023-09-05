@@ -10,11 +10,12 @@
   } from '@snort/system';
 
   import { system, wikiKind } from '$lib/nostr';
-  import type { TabType } from '$lib/types';
+  import type { Tab } from '$lib/types';
   import UserLabel from '$components/UserLabel.svelte';
+  import { next } from '$lib/utils';
 
   let results: TaggedNostrEvent[] = [];
-  export let createChild: (type: TabType, data: string) => void;
+  export let createChild: (tab: Tab) => void;
 
   onMount(() => {
     const rb = new RequestBuilder('recent');
@@ -44,7 +45,12 @@
   {#each results as result}
     <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
     <div
-      on:click={() => createChild('article', result.id)}
+      on:click={() =>
+        createChild({
+          type: 'article',
+          id: next(),
+          data: result.id
+        })}
       class="cursor-pointer px-4 py-5 bg-white border border-gray-300 hover:bg-slate-50 rounded-lg mt-2 min-h-[48px]"
     >
       <h1>

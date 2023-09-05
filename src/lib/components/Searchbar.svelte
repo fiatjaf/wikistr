@@ -1,6 +1,6 @@
 <script lang="ts">
   import { tabs } from '$lib/state';
-  import { scrollTabIntoView } from '$lib/utils';
+  import { next, scrollTabIntoView } from '$lib/utils';
   import type { Tab } from '$lib/types';
 
   let query = '';
@@ -16,6 +16,7 @@
       newTabs.push(newTab);
       tabs.set(newTabs);
       scrollTabIntoView(String(newTab.id), true);
+      query = '';
     }
   }
 </script>

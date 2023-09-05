@@ -1,40 +1,22 @@
 <script lang="ts">
-  import { EventBuilder } from '@snort/system';
+  import { EventBuilder, EventKind } from '@snort/system';
+
   import { signer, system, wikiKind } from '$lib/nostr';
+  import type { EditorData } from '$lib/types.ts';
 
-  export let startTitle: undefined | string;
-  export let startSummary: undefined | string;
-  export let startContent: undefined | string;
-  export let startD: undefined | string;
-
-  let articleTitle: string = '';
-  let articleSummary: string = '';
-  let articleContent: string = '';
+  export let data: EditorData;
 
   let success = 0;
   let error: string = '';
 
-  if (startD) {
-    articleTitle = startD;
-  }
-  if (startTitle) {
-    articleTitle = startTitle;
-  }
-  if (startSummary) {
-    articleSummary = startSummary;
-  }
-  if (startContent) {
-    articleContent = startContent;
-  }
-
   async function publish() {
     try {
       let event = await new EventBuilder()
-        .kind(wikiKind)
-        .content(articleContent)
-        .tag(['d', articleTitle.toLowerCase().replaceAll(' ', '-')])
-        .tag(['title', articleTitle])
-        .tag(['summary', articleSummary])
+        .kind(wikiKind as EventKind)
+        .content(data.content)
+        .tag(['d', data.title.toLowerCase().replaceAll(' ', '-')])
+        .tag(['title', data.title])
+        .tag(['summary', data.summary])
         .buildAndSign(signer);
 
       system.BroadcastEvent(event);
@@ -56,7 +38,7 @@
       >Title
       <input
         placeholder="example: Greek alphabet"
-        bind:value={articleTitle}
+        bind:value={data.title}
         class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ml-2"
       /></label
     >
@@ -66,7 +48,7 @@
       >Article
       <textarea
         placeholder="The **Greek alphabet** has been used to write the [[Greek language]] sincie the late 9th or early 8th century BC. The Greek alphabet is the ancestor of the [[Latin]] and [[Cyrillic]] scripts."
-        bind:value={articleContent}
+        bind:value={data.content}
         rows="9"
         class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
       /></label
@@ -78,7 +60,7 @@
       <label
         >Summary
         <textarea
-          bind:value={articleSummary}
+          bind:value={data.summary}
           rows="3"
           placeholder="The Greek alphabet is the earliest known alphabetic script to have distict letters for vowels. The Greek alphabet existed in many local variants."
           class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"

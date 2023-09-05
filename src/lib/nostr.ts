@@ -3,7 +3,8 @@ import {
   EventPublisher,
   Nip7Signer,
   UserRelaysCache,
-  UserProfileCache
+  UserProfileCache,
+  NoteCollection
 } from '@snort/system';
 
 export const wikiKind = 30818;

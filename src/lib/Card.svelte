@@ -1,13 +1,19 @@
 <script lang="ts">
   import { tabs } from '$lib/state';
-  import type { Tab, TabType } from '$lib/types';
-  import { next, scrollTabIntoView, isElementInViewport } from '$lib/utils';
+  import type { Tab } from '$lib/types';
+  import { scrollTabIntoView, isElementInViewport } from '$lib/utils';
   import Article from '$cards/Article.svelte';
   import Editor from '$cards/Editor.svelte';
   import RecentArticles from '$cards/RecentArticles.svelte';
   import Search from '$cards/Search.svelte';
   import Settings from '$cards/Settings.svelte';
+
   export let tab: Tab;
+
+  function close() {
+    if (tab.type === 'editor' && tab.data.previous) replaceSelf(tab.data.previous);
+    else removeSelf();
+  }
 
   function removeSelf() {
     const index = $tabs.findIndex((item) => item.id === tab.id);
@@ -18,15 +24,10 @@
     }
   }
 
-  function createChild(type: TabType, data: string) {
+  function createChild(newChild: Tab) {
+    newChild.parent = tab.id;
     const index = $tabs.findIndex((item) => item.id === tab.id);
     if (index !== -1) {
-      const newChild: Tab = {
-        id: next(),
-        parent: tab.id,
-        type: type,
-        data: data
-      };
       const newTabs = $tabs.slice(0, index + 1).concat(newChild);
       tabs.set(newTabs);
       setTimeout(() => {
@@ -37,7 +38,7 @@
     }
   }
 
-  function replaceSelf(newType: TabType, newData: string) {
+  function replaceSelf(updatedTab: Tab) {
     const index = $tabs.findIndex((item) => item.id === tab.id);
     if (index !== -1) {
       const newTabs = $tabs.slice();
@@ -48,23 +49,9 @@
           newTabs.splice(childIndex, 1);
         }
       });
-      const updatedTab: Tab = {
-        id: next(),
-        type: newType,
-        data: newData
-      };
       newTabs[index] = updatedTab;
       tabs.set(newTabs);
     }
-  }
-
-  let idtoload: string | undefined = undefined;
-  let searchquerytoload: string | undefined = undefined;
-
-  if (tab.type == 'articlefind') {
-    searchquerytoload = tab.data;
-  } else if (tab.type == 'article') {
-    idtoload = tab.data;
   }
 
   function handleClick(ev: { currentTarget: HTMLElement }) {
@@ -84,7 +71,7 @@
   h-[calc(100vh_-_32px)]"
   on:click={handleClick}
 >
-  <button on:click={removeSelf}
+  <button on:click={close}
     ><svg
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
@@ -95,28 +82,15 @@
       ><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg
     ></button
   >
-  {#if idtoload}
-    <Article {replaceSelf} {createChild} eventId={idtoload} />
-  {/if}
-
-  {#if searchquerytoload}
-    <Search {createChild} {replaceSelf} query={searchquerytoload} />
-  {/if}
-
-  {#if tab.type == 'welcome'}
+  {#if tab.type === 'article'}
+    <Article {replaceSelf} {createChild} eventId={tab.data} {tab} />
+  {:else if tab.type === 'articlefind'}
+    <Search {createChild} {replaceSelf} query={tab.data} />
+  {:else if tab.type === 'welcome'}
     <RecentArticles {createChild} />
-  {/if}
-
-  {#if tab.type == 'settings'}
+  {:else if tab.type === 'settings'}
     <Settings />
-  {/if}
-
-  {#if tab.type == 'editor'}
-    <Editor
-      startSummary={JSON.parse(tab.data || 'undefined').startSummary || undefined}
-      startTitle={JSON.parse(tab.data || 'undefined').startTitle || undefined}
-      startContent={JSON.parse(tab.data || 'undefined').startContent || undefined}
-      startD={JSON.parse(tab.data || 'undefined').startD || undefined}
-    />
+  {:else if tab.type === 'editor'}
+    <Editor data={tab.data} />
   {/if}
 </div>

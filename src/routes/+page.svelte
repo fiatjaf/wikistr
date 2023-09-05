@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createChildEverywhere, tabs } from '$lib/state';
+  import { tabs } from '$lib/state';
   import TabElement from '$lib/Card.svelte';
   import Searchbar from '$components/Searchbar.svelte';
   import { scrollTabIntoView } from '$lib/utils';
@@ -20,10 +20,6 @@
         $tabs.push(newTab);
         tabs.set($tabs);
       }
-    }
-
-    if ($page.url.searchParams.get('createChildEverywhere') !== null) {
-      createChildEverywhere.set(true);
     }
   });
 </script>
