@@ -12,11 +12,12 @@
     "format": "prettier --plugin-search-dir . --write ."
   },
   "devDependencies": {
-    "@sveltejs/adapter-auto": "^2.0.0",
+    "@sveltejs/adapter-auto": "^2.1.0",
     "@sveltejs/kit": "^1.20.4",
     "@types/markdown-it": "^13.0.1",
-    "@typescript-eslint/eslint-plugin": "^6.5.0",
+    "@typescript-eslint/eslint-plugin": "^6.6.0",
     "autoprefixer": "^10.4.14",
+    "eslint": "^8.48.0",
     "eslint-plugin-svelte": "^2.33.0",
     "postcss": "^8.4.24",
     "postcss-load-config": "^4.0.1",
