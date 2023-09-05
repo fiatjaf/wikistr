@@ -1,4 +1,10 @@
-import { NostrSystem, EventPublisher, Nip7Signer, UserRelaysCache } from '@snort/system';
+import {
+  NostrSystem,
+  EventPublisher,
+  Nip7Signer,
+  UserRelaysCache,
+  UserProfileCache
+} from '@snort/system';
 
 export const wikiKind = 30818;
 export const labelKind = 1985;
@@ -24,9 +30,12 @@ export function saveStaticRelays(relays: string[]) {
 
 export const publisher = async () => await EventPublisher.nip7();
 export const signer = new Nip7Signer();
+export const relayCache = new UserRelaysCache();
+export const profileCache = new UserProfileCache();
 
 export const system = new NostrSystem({
-  relayCache: new UserRelaysCache(),
+  relayCache,
+  profileCache,
   authHandler: async (challenge: string, relay: string) => {
     const pub = await publisher();
     if (pub) {

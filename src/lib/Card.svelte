@@ -96,7 +96,7 @@
     ></button
   >
   {#if idtoload}
-    <Article {replaceSelf} {createChild} eventid={idtoload} />
+    <Article {replaceSelf} {createChild} eventId={idtoload} />
   {/if}
 
   {#if searchquerytoload}

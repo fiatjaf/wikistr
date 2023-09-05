@@ -1,6 +1,11 @@
 <script lang="ts">
   import { afterUpdate, onMount } from 'svelte';
-  import { type NostrEvent, NoteCollection, RequestBuilder } from '@snort/system';
+  import {
+    type NostrEvent,
+    NoteCollection,
+    RequestBuilder,
+    type StoreSnapshot
+  } from '@snort/system';
 
   import { system } from '$lib/nostr';
   import { formatDate } from '$lib/utils';
@@ -10,7 +15,7 @@
   import { createChildEverywhere } from '$lib/state';
   import UserLabel from '$components/UserLabel.svelte';
 
-  export let eventid: string;
+  export let eventId: string;
   export let createChild: (type: TabType, data: string) => void;
   export let replaceSelf: (newType: TabType, newData: string) => void;
   let event: NostrEvent | null = null;
@@ -28,7 +33,7 @@
   }
 
   function shareCopy() {
-    navigator.clipboard.writeText(`https://${$page.url.hostname}/?d=${eventid}`);
+    navigator.clipboard.writeText(`https://${$page.url.hostname}/?d=${eventId}`);
     copied = true;
     setTimeout(() => {
       copied = false;
@@ -36,16 +41,24 @@
   }
 
   onMount(() => {
-    const rb = new RequestBuilder('specific-article');
-    rb.withFilter().ids([eventid]);
+    const rb = new RequestBuilder('article:' + eventId);
+    rb.withFilter().ids([eventId]);
 
     const q = system.Query(NoteCollection, rb);
-    q.onEvent = (_, evt) => {
-      event = evt;
-      q.cancel();
-    };
+    const release = q.feed.hook(() => {
+      const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
+      if (state.data?.length) {
+        event = state.data[0];
+        cancel();
+      }
+    });
 
-    return () => q.cancel();
+    function cancel() {
+      release();
+      q.cancel();
+    }
+
+    return cancel;
   });
 
   afterUpdate(() => {

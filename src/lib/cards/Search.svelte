@@ -21,7 +21,7 @@
   let tried = false;
 
   onMount(() => {
-    const rb = new RequestBuilder('article-search');
+    const rb = new RequestBuilder(`search:${query}`);
     rb.withFilter()
       .kinds([wikiKind as EventKind])
       .tag('d', [query, query.toLowerCase()])
