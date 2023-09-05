@@ -1,6 +1,6 @@
 <script lang="ts">
   import { tabs } from '$lib/state';
-  import { generateRandomNumber, scrollTabIntoView } from '$lib/utils';
+  import { scrollTabIntoView } from '$lib/utils';
   import type { Tab } from '$lib/types';
 
   let query = '';
@@ -9,7 +9,7 @@
     if (query) {
       let newTabs = $tabs;
       const newTab: Tab = {
-        id: generateRandomNumber(),
+        id: next(),
         type: 'articlefind',
         data: query.toLowerCase().replaceAll(' ', '-')
       };

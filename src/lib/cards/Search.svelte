@@ -2,14 +2,17 @@
   import {
     NoteCollection,
     RequestBuilder,
+    EventKind,
     type TaggedNostrEvent,
     type StoreSnapshot
   } from '@snort/system';
-  import { system, wikiKind } from '$lib/nostr';
   import { onMount } from 'svelte';
+
+  import { system, wikiKind } from '$lib/nostr';
   import type { TabType } from '$lib/types';
   import { createChildEverywhere } from '$lib/state';
   import { parsePlainText } from '$lib/articleParser';
+  import UserLabel from '$components/UserLabel.svelte';
 
   export let query: string;
   export let replaceSelf: (newType: TabType, newData: string) => void;
@@ -19,7 +22,10 @@
 
   onMount(() => {
     const rb = new RequestBuilder('article-search');
-    rb.withFilter().kinds([wikiKind]).tag('d', [query, query.toLowerCase()]).limit(25);
+    rb.withFilter()
+      .kinds([wikiKind as EventKind])
+      .tag('d', [query, query.toLowerCase()])
+      .limit(25);
 
     const q = system.Query(NoteCollection, rb);
     const release = q.feed.hook(() => {
@@ -70,7 +76,7 @@
         <!-- {#if result.tags.find((e) => e[0] == "published_at")}
               on {formatDate(result.tags.find((e) => e[0] == "published_at")[1])}
               {/if} -->
-        by <span class="text-gray-600 font-[600]">{result.pubkey}</span>
+        by <UserLabel pubkey={result.pubkey} />
       </p>
       <p class="text-xs">
         {#if result.tags.find((e) => e[0] == 'summary')?.[0] && result.tags.find((e) => e[0] == 'summary')?.[1]}
@@ -81,7 +87,9 @@
               192
             )}{#if String(result.tags.find((e) => e[0] == 'summary')?.[1])?.length > 192}...{/if}
         {:else}
-          {result.content.length <= 192 ? parsePlainText(result.content.slice(0, 189)) : parsePlainText(result.content.slice(0, 189)) + '...'}
+          {result.content.length <= 192
+            ? parsePlainText(result.content.slice(0, 189))
+            : parsePlainText(result.content.slice(0, 189)) + '...'}
         {/if}
       </p>
     </div>

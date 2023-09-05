@@ -11,6 +11,7 @@
 
   import { system, wikiKind } from '$lib/nostr';
   import type { TabType } from '$lib/types';
+  import UserLabel from '$components/UserLabel.svelte';
 
   let results: TaggedNostrEvent[] = [];
   export let createChild: (type: TabType, data: string) => void;
@@ -57,7 +58,7 @@
         <!-- {#if result.tags.find((e) => e[0] == "published_at")}
                 on {formatDate(result.tags.find((e) => e[0] == "published_at")[1])}
                 {/if} -->
-        by <span class="text-gray-600 font-[600]">{result.pubkey}</span>
+        by <UserLabel pubkey={result.pubkey} />
       </p>
       <p class="text-xs">
         {#if result.tags.find((e) => e[0] == 'summary')?.[0] && result.tags.find((e) => e[0] == 'summary')?.[1]}

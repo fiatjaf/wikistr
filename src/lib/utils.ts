@@ -23,17 +23,10 @@ export function formatDate(unixtimestamp: number) {
   return formattedDate;
 }
 
-const generatedNumbers: Set<number> = new Set();
+let serial = 1;
 
-export function generateRandomNumber(): number {
-  let randomNumber: number;
-
-  do {
-    randomNumber = Math.floor(Math.random() * 1000000);
-  } while (generatedNumbers.has(randomNumber));
-
-  generatedNumbers.add(randomNumber);
-  return randomNumber;
+export function next(): number {
+  return serial++;
 }
 
 export function scrollTabIntoView(el: string | HTMLElement, wait: boolean) {

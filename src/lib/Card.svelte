@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tabs } from '$lib/state';
   import type { Tab, TabType } from '$lib/types';
-  import { generateRandomNumber, scrollTabIntoView, isElementInViewport } from '$lib/utils';
+  import { next, scrollTabIntoView, isElementInViewport } from '$lib/utils';
   import Article from '$cards/Article.svelte';
   import Editor from '$cards/Editor.svelte';
   import RecentArticles from '$cards/RecentArticles.svelte';
@@ -22,7 +22,7 @@
     const index = $tabs.findIndex((item) => item.id === tab.id);
     if (index !== -1) {
       const newChild: Tab = {
-        id: generateRandomNumber(),
+        id: next(),
         parent: tab.id,
         type: type,
         data: data
@@ -49,7 +49,7 @@
         }
       });
       const updatedTab: Tab = {
-        id: generateRandomNumber(),
+        id: next(),
         type: newType,
         data: newData
       };

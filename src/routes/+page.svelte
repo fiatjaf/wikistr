@@ -1,6 +1,6 @@
 <script lang="ts">
-  import TabElement from '$lib/Card.svelte';
   import { createChildEverywhere, tabs } from '$lib/state';
+  import TabElement from '$lib/Card.svelte';
   import Searchbar from '$components/Searchbar.svelte';
   import { scrollTabIntoView } from '$lib/utils';
   import { onMount } from 'svelte';

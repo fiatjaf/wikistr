@@ -1,12 +1,14 @@
 <script lang="ts">
-  import { NostrEvent, NoteCollection, RequestBuilder } from '@snort/system';
-  import { system } from '$lib/nostr';
   import { afterUpdate, onMount } from 'svelte';
+  import { type NostrEvent, NoteCollection, RequestBuilder } from '@snort/system';
+
+  import { system } from '$lib/nostr';
   import { formatDate } from '$lib/utils';
   import { parse } from '$lib/articleParser.js';
   import type { TabType } from '$lib/types';
   import { page } from '$app/stores';
   import { createChildEverywhere } from '$lib/state';
+  import UserLabel from '$components/UserLabel.svelte';
 
   export let eventid: string;
   export let createChild: (type: TabType, data: string) => void;
@@ -65,7 +67,7 @@
         {/if}
       </h1>
       <span>
-        by <span class="text-gray-600 font-[600]">{event.pubkey}</span>
+        by <UserLabel pubkey={event.pubkey} />
         {#if event.created_at}
           updated on {formatDate(event.created_at)}
         {/if}

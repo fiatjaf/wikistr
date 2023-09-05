@@ -34,6 +34,8 @@ export const system = new NostrSystem({
   }
 });
 
+system.Init();
+
 getStaticRelays().forEach((relay) => {
   system.ConnectToRelay(relay, { read: true, write: true });
 });
