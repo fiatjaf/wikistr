@@ -28,19 +28,21 @@
       .limit(25);
 
     const q = system.Query(NoteCollection, rb);
-    const release = q.feed.hook(() => {
-      const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
-      if (state.data) {
-        results = state.data.concat();
-        tried = true;
-      }
-    });
+    const release = q.feed.hook(handleUpdate);
 
     setTimeout(() => {
       if (results.length === 0) {
         tried = true;
       }
     }, 1000);
+
+    function handleUpdate() {
+      const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
+      if (state.data) {
+        results = state.data.concat();
+        tried = true;
+      }
+    }
 
     return () => {
       release();

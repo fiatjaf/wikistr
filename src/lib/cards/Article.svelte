@@ -44,17 +44,21 @@
     rb.withFilter().ids([eventId]);
 
     const q = system.Query(NoteCollection, rb);
-    const release = q.feed.hook(() => {
+    const release = q.feed.hook(handleUpdate);
+
+    handleUpdate();
+
+    function cancel() {
+      release();
+      q.cancel();
+    }
+
+    function handleUpdate() {
       const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
       if (state.data?.length) {
         event = state.data[0];
         cancel();
       }
-    });
-
-    function cancel() {
-      release();
-      q.cancel();
     }
 
     return cancel;
