@@ -21,5 +21,17 @@
     }
 
     tabs.set($tabs);
+
+    let prev = $page.params.path.split('/');
+    return page.subscribe((v) => {
+      let path = v.params.path.split('/');
+      if (path.length < prev.length) {
+        let removed = prev.find((item) => !path.includes(item));
+        if (removed) {
+          tabs.set($tabs.filter((tab) => tab.data !== removed));
+        }
+      }
+      prev = path;
+    });
   });
 </script>
