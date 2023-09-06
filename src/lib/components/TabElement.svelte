@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
+
   import { tabs } from '$lib/state';
   import type { Tab } from '$lib/types';
-  import { scrollTabIntoView, isElementInViewport } from '$lib/utils';
+  import { scrollTabIntoView, isElementInViewport, toURL } from '$lib/utils';
   import Article from '$cards/Article.svelte';
   import Editor from '$cards/Editor.svelte';
   import RecentArticles from '$cards/RecentArticles.svelte';
@@ -21,6 +24,13 @@
       const newTabs = [...$tabs];
       newTabs.splice(index, 1);
       tabs.set(newTabs);
+      goto(
+        '/' +
+          $tabs
+            .map((tab) => toURL(tab))
+            .filter((v) => v)
+            .join('/')
+      );
     }
   }
 
@@ -30,6 +40,14 @@
     if (index !== -1) {
       const newTabs = $tabs.slice(0, index + 1).concat(newChild);
       tabs.set(newTabs);
+      goto(
+        '/' +
+          $tabs
+            .map((tab) => toURL(tab))
+            .filter((v) => v)
+            .join('/')
+      );
+
       setTimeout(() => {
         if (!isElementInViewport(String(newChild.id))) {
           scrollTabIntoView(String(newChild.id), false);
@@ -52,6 +70,13 @@
       });
       newTabs[index] = updatedTab;
       tabs.set(newTabs);
+      goto(
+        '/' +
+          $tabs
+            .map((tab) => toURL(tab))
+            .filter((v) => v)
+            .join('/')
+      );
     }
   }
 

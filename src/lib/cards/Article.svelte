@@ -21,6 +21,9 @@
   let event: NostrEvent | null = null;
   let copied = false;
 
+  $: title = event?.tags.find(([k]) => k === 'title')?.[1] || '';
+  $: summary = event?.tags.find(([k]) => k === 'summary')?.[1];
+
   function addClickListenerToWikilinks() {
     const elements = document.querySelectorAll('[id^="wikilink-v0-"]');
     elements.forEach((element) => {
@@ -31,8 +34,21 @@
     });
   }
 
+  function edit() {
+    replaceSelf({
+      id: next(),
+      type: 'editor',
+      data: {
+        title,
+        summary,
+        content: event?.content,
+        previous: tab
+      }
+    });
+  }
+
   function shareCopy() {
-    navigator.clipboard.writeText(`https://${$page.url.hostname}/?d=${eventId}`);
+    navigator.clipboard.writeText(`https://${$page.url.hostname}/${title}/${eventId}`);
     copied = true;
     setTimeout(() => {
       copied = false;
@@ -97,27 +113,13 @@
           on {formatDate(event.created_at)}
         {/if}
         <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
-        <br /><a
-          class="cursor-pointer"
-          on:click={() => {
-            replaceSelf({
-              id: next(),
-              type: 'editor',
-              data: {
-                title: event?.tags.find(([k]) => k === 'title')?.[1] || '',
-                summary: event?.tags.find(([k]) => k === 'summary')?.[1],
-                content: event?.content,
-                previous: tab
-              }
-            });
-          }}>Fork</a
-        >
+        <br /><a class="cursor-pointer" on:click={edit}>Fork</a>
         &nbsp;• &nbsp;
         <a class="cursor-pointer" on:click={shareCopy}
           >{#if copied}Copied!{:else}Share{/if}</a
         >
         &nbsp;• &nbsp;
-        <a class="cursor-pointer" on:mouseup={seeOthers}>Others</a>
+        <a class="cursor-pointer" on:mouseup|preventDefault={seeOthers}>Others</a>
       </span>
 
       <!-- Content -->

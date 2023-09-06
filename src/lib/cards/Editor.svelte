@@ -12,21 +12,20 @@
 
   async function publish() {
     try {
-      let event = await new EventBuilder()
+      let eb = new EventBuilder()
         .kind(wikiKind as EventKind)
         .content(data.content)
         .tag(['d', data.title.toLowerCase().replaceAll(' ', '-')])
-        .tag(['title', data.title])
-        .tag(['summary', data.summary])
-        .buildAndSign(signer);
-
+        .tag(['title', data.title]);
+      if (data.summary) eb = eb.tag(['summary', data.summary]);
+      let event = await eb.buildAndSign(signer);
       system.BroadcastEvent(event);
 
       setTimeout(() => {
         replaceSelf({ id: next(), type: 'article', data: event.id });
       }, 1400);
     } catch (err) {
-      console.log('failed to publish event', error);
+      console.warn('failed to publish event', error);
       error = String(err);
     }
   }

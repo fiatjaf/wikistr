@@ -29,6 +29,7 @@
 
     const q = system.Query(NoteCollection, rb);
     const release = q.feed.hook(handleUpdate);
+    handleUpdate();
 
     setTimeout(() => {
       if (results.length === 0) {

@@ -1,3 +1,5 @@
+import type { Tab } from './types';
+
 export function formatDate(unixtimestamp: number) {
   const months = [
     'Jan',
@@ -62,4 +64,14 @@ export function isElementInViewport(el: string | HTMLElement) {
     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
   );
+}
+
+export function toURL(tab: Tab): string | null {
+  switch (tab.type) {
+    case 'articlefind':
+      return tab.data;
+    case 'article':
+      return tab.data;
+  }
+  return null;
 }
