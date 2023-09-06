@@ -10,7 +10,7 @@
   import { system } from '$lib/nostr';
   import { formatDate, next } from '$lib/utils';
   import { parse } from '$lib/articleParser.js';
-  import type { Tab } from '$lib/types';
+  import type { SearchTab, Tab } from '$lib/types';
   import { page } from '$app/stores';
   import UserLabel from '$components/UserLabel.svelte';
 
@@ -39,6 +39,16 @@
     }, 2500);
   }
 
+  function seeOthers(ev: MouseEvent) {
+    let nextTab: SearchTab = {
+      id: next(),
+      type: 'articlefind',
+      data: event?.tags.find(([k]) => k === 'd')?.[1] || ''
+    };
+    if (ev.button === 1) createChild(nextTab);
+    else replaceSelf(nextTab);
+  }
+
   onMount(() => {
     const rb = new RequestBuilder('article:' + eventId);
     rb.withFilter().ids([eventId]);
@@ -48,20 +58,17 @@
 
     handleUpdate();
 
-    function cancel() {
-      release();
-      q.cancel();
-    }
-
     function handleUpdate() {
       const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
       if (state.data?.length) {
         event = state.data[0];
-        cancel();
       }
     }
 
-    return cancel;
+    return () => {
+      release();
+      q.cancel();
+    };
   });
 
   afterUpdate(() => {
@@ -87,10 +94,10 @@
       <span>
         by <UserLabel pubkey={event.pubkey} />
         {#if event.created_at}
-          updated on {formatDate(event.created_at)}
+          on {formatDate(event.created_at)}
         {/if}
         <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
-        &nbsp;• &nbsp;<a
+        <br /><a
           class="cursor-pointer"
           on:click={() => {
             replaceSelf({
@@ -105,9 +112,12 @@
             });
           }}>Fork</a
         >
-        &nbsp;• &nbsp;<a class="cursor-pointer" on:click={shareCopy}
+        &nbsp;• &nbsp;
+        <a class="cursor-pointer" on:click={shareCopy}
           >{#if copied}Copied!{:else}Share{/if}</a
         >
+        &nbsp;• &nbsp;
+        <a class="cursor-pointer" on:mouseup={seeOthers}>Others</a>
       </span>
 
       <!-- Content -->

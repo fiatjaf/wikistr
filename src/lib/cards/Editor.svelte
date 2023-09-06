@@ -2,12 +2,13 @@
   import { EventBuilder, EventKind } from '@snort/system';
 
   import { signer, system, wikiKind } from '$lib/nostr';
-  import type { EditorData } from '$lib/types.ts';
+  import type { EditorData, Tab } from '$lib/types.ts';
+  import { next } from '$lib/utils';
 
+  export let replaceSelf: (tab: Tab) => void;
   export let data: EditorData;
 
-  let success = 0;
-  let error: string = '';
+  let error: string | undefined;
 
   async function publish() {
     try {
@@ -20,11 +21,13 @@
         .buildAndSign(signer);
 
       system.BroadcastEvent(event);
-      success = 1;
+
+      setTimeout(() => {
+        replaceSelf({ id: next(), type: 'article', data: event.id });
+      }, 1400);
     } catch (err) {
       console.log('failed to publish event', error);
       error = String(err);
-      success = -1;
     }
   }
 </script>
@@ -70,7 +73,7 @@
   </div>
 
   <!-- Submit -->
-  {#if success !== 1}
+  {#if !error}
     <div class="mt-2">
       <button
         on:click={publish}
@@ -81,15 +84,11 @@
   {/if}
 
   <div>
-    {#if success == -1}
+    {#if error}
+      <p>Something went wrong:</p>
       <p>
-        Something went wrong :( note that NIP07 browser extentions are only supported for signing
+        {error}
       </p>
-      <p>
-        Error Message: {error}
-      </p>
-    {:else if success == 1}
-      <p>Success!</p>
     {/if}
   </div>
 </div>

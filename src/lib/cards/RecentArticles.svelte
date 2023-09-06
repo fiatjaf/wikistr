@@ -24,12 +24,15 @@
       .limit(12);
 
     const q = system.Query(NoteCollection, rb);
-    const release = q.feed.hook(() => {
+    const release = q.feed.hook(handleUpdate);
+    handleUpdate();
+
+    function handleUpdate() {
       const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
       if (state.data) {
         results = state.data.concat();
       }
-    });
+    }
 
     return () => {
       release();
