@@ -10,12 +10,13 @@
   } from '@snort/system';
 
   import { system, wikiKind } from '$lib/nostr';
-  import type { Tab } from '$lib/types';
+  import type { ArticleTab, Tab } from '$lib/types';
   import UserLabel from '$components/UserLabel.svelte';
   import { next } from '$lib/utils';
 
   let results: TaggedNostrEvent[] = [];
   export let createChild: (tab: Tab) => void;
+  export let replaceSelf: (tab: Tab) => void;
 
   onMount(() => {
     const rb = new RequestBuilder('recent');
@@ -39,6 +40,12 @@
       q.cancel();
     };
   });
+
+  function openArticle(result: TaggedNostrEvent, ev: MouseEvent) {
+    let articleTab: ArticleTab = { id: next(), type: 'article', data: result.id };
+    if (ev.button === 1) createChild(articleTab);
+    else replaceSelf(articleTab);
+  }
 </script>
 
 <div class="font-sans mx-auto p-6 lg:max-w-4xl lg:pt-6 lg:pb-28">
@@ -48,12 +55,7 @@
   {#each results as result}
     <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
     <div
-      on:click={() =>
-        createChild({
-          type: 'article',
-          id: next(),
-          data: result.id
-        })}
+      on:mouseup|preventDefault={openArticle.bind(null, result)}
       class="cursor-pointer px-4 py-5 bg-white border border-gray-300 hover:bg-slate-50 rounded-lg mt-2 min-h-[48px]"
     >
       <h1>

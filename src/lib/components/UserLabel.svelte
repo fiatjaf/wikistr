@@ -14,15 +14,20 @@
 
   onMount(() => {
     system.ProfileLoader.TrackMetadata(pubkey);
+    handleResult();
 
     const release = system.ProfileLoader.Cache.hook(() => {
+      handleResult();
+      system.ProfileLoader.UntrackMetadata(pubkey);
+      release();
+    }, pubkey);
+
+    function handleResult() {
       let val = system.ProfileLoader.Cache.getFromCache(pubkey);
       if (val) {
         metadata = val;
       }
-      system.ProfileLoader.UntrackMetadata(pubkey);
-      release();
-    }, pubkey);
+    }
 
     return release;
   });

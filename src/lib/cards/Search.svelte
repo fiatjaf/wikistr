@@ -9,12 +9,13 @@
   import { onMount } from 'svelte';
 
   import { system, wikiKind } from '$lib/nostr';
-  import type { Tab } from '$lib/types';
+  import type { ArticleTab, Tab } from '$lib/types';
   import { parsePlainText } from '$lib/articleParser';
   import UserLabel from '$components/UserLabel.svelte';
   import { next } from '$lib/utils';
 
   export let query: string;
+  export let tab: Tab;
   export let replaceSelf: (tab: Tab) => void;
   export let createChild: (tab: Tab) => void;
   let results: TaggedNostrEvent[] = [];
@@ -50,6 +51,12 @@
       q.cancel();
     };
   });
+
+  function openArticle(result: TaggedNostrEvent, ev: MouseEvent) {
+    let articleTab: ArticleTab = { id: next(), type: 'article', data: result.id };
+    if (ev.button === 1) createChild(articleTab);
+    else replaceSelf(articleTab);
+  }
 </script>
 
 <div class="font-sans mx-auto p-6 lg:max-w-4xl lg:pt-6 lg:pb-28">
@@ -62,9 +69,7 @@
   {#each results as result}
     <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
     <div
-      on:click={() => {
-        replaceSelf({ id: next(), type: 'article', data: result.id });
-      }}
+      on:mouseup|preventDefault={openArticle.bind(null, result)}
       class="cursor-pointer px-4 py-5 bg-white border border-gray-300 hover:bg-slate-50 rounded-lg mt-2 min-h-[48px]"
     >
       <h1>
@@ -103,7 +108,7 @@
       </p>
       <button
         on:click={() => {
-          replaceSelf({ id: next(), type: 'editor', data: { startD: query } });
+          replaceSelf({ id: next(), type: 'editor', data: { title: query, previous: tab } });
         }}
         class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
       >

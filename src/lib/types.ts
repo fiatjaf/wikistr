@@ -23,6 +23,7 @@ export type SearchTab = {
 
 export type ArticleTab = {
   id: number;
+  type: TabType;
   parent?: number;
   data: string; // event id
 };

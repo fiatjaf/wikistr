@@ -1,6 +1,5 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
 
   import { tabs } from '$lib/state';
   import type { Tab } from '$lib/types';
@@ -109,11 +108,11 @@
     ></button
   >
   {#if tab.type === 'article'}
-    <Article {replaceSelf} {createChild} eventId={tab.data} {tab} />
+    <Article {createChild} {replaceSelf} eventId={tab.data} {tab} />
   {:else if tab.type === 'articlefind'}
-    <Search {createChild} {replaceSelf} query={tab.data} />
+    <Search {createChild} {replaceSelf} query={tab.data} {tab} />
   {:else if tab.type === 'welcome'}
-    <RecentArticles {createChild} />
+    <RecentArticles {createChild} {replaceSelf} />
   {:else if tab.type === 'settings'}
     <Settings />
   {:else if tab.type === 'editor'}
