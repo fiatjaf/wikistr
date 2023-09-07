@@ -13,6 +13,7 @@
   import { parsePlainText } from '$lib/articleParser';
   import UserLabel from '$components/UserLabel.svelte';
   import { next } from '$lib/utils';
+  import { track } from '$lib/labels';
 
   export let query: string;
   export let tab: Tab;
@@ -29,6 +30,7 @@
       .limit(25);
 
     const q = system.Query(NoteCollection, rb);
+    q.feed.onEvent((events) => events.forEach(track));
     const release = q.feed.hook(handleUpdate);
     handleUpdate();
 
@@ -38,6 +40,11 @@
       }
     }, 1000);
 
+    return () => {
+      release();
+      q.cancel();
+    };
+
     function handleUpdate() {
       const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
       if (state.data) {
@@ -45,11 +52,6 @@
         tried = true;
       }
     }
-
-    return () => {
-      release();
-      q.cancel();
-    };
   });
 
   function openArticle(result: TaggedNostrEvent, ev: MouseEvent) {

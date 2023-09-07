@@ -13,6 +13,7 @@
   import type { SearchTab, Tab } from '$lib/types';
   import { page } from '$app/stores';
   import UserLabel from '$components/UserLabel.svelte';
+  import { track } from '$lib/labels';
 
   export let eventId: string;
   export let tab: Tab;
@@ -71,20 +72,22 @@
 
     const q = system.Query(NoteCollection, rb);
     const release = q.feed.hook(handleUpdate);
-
     handleUpdate();
+    return cancel;
 
     function handleUpdate() {
       const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
       if (state.data?.length) {
         event = state.data[0];
+        track(event);
+        cancel();
       }
     }
 
-    return () => {
+    function cancel() {
       release();
       q.cancel();
-    };
+    }
   });
 
   afterUpdate(() => {

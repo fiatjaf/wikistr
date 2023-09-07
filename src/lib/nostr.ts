@@ -4,11 +4,11 @@ import {
   Nip7Signer,
   UserRelaysCache,
   UserProfileCache,
-  NoteCollection
 } from '@snort/system';
 
-export const wikiKind = 30818;
+export const reactionKind = 7;
 export const labelKind = 1985;
+export const wikiKind = 30818;
 
 const localStorageRelaysKey = 'static-relays';
 

@@ -10,6 +10,7 @@
   } from '@snort/system';
 
   import { system, wikiKind } from '$lib/nostr';
+  import { track } from '$lib/labels';
   import type { ArticleTab, Tab } from '$lib/types';
   import UserLabel from '$components/UserLabel.svelte';
   import { next } from '$lib/utils';
@@ -25,8 +26,14 @@
       .limit(12);
 
     const q = system.Query(NoteCollection, rb);
+    q.feed.onEvent((events) => events.forEach(track));
     const release = q.feed.hook(handleUpdate);
     handleUpdate();
+
+    return () => {
+      release();
+      q.cancel();
+    };
 
     function handleUpdate() {
       const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
@@ -34,11 +41,6 @@
         results = state.data.concat();
       }
     }
-
-    return () => {
-      release();
-      q.cancel();
-    };
   });
 
   function openArticle(result: TaggedNostrEvent, ev: MouseEvent) {
