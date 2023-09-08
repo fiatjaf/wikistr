@@ -9,7 +9,7 @@
   let metadata: MetadataCache;
   let npub = nip19.npubEncode(pubkey);
 
-  $: name = metadata?.name || npub.slice(0, 11);
+  $: name = metadata?.name && metadata.name.trim() !== '' ? metadata.name : npub.slice(0, 11);
   $: picture = metadata?.picture;
 
   onMount(() => {

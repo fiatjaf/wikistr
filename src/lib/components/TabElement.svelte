@@ -109,7 +109,7 @@
   >
   {#if tab.type === 'article'}
     <Article {createChild} {replaceSelf} eventId={tab.data} {tab} />
-  {:else if tab.type === 'articlefind'}
+  {:else if tab.type === 'find'}
     <Search {createChild} {replaceSelf} query={tab.data} {tab} />
   {:else if tab.type === 'welcome'}
     <RecentArticles {createChild} {replaceSelf} />

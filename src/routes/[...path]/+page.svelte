@@ -15,7 +15,7 @@
         if (item.match(/^[a-f0-9]{64}$/)) {
           $tabs.push({ id: next(), type: 'article', data: item });
         } else {
-          $tabs.push({ id: next(), type: 'articlefind', data: item });
+          $tabs.push({ id: next(), type: 'find', data: item });
         }
       });
     }

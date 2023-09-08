@@ -68,7 +68,7 @@ export function isElementInViewport(el: string | HTMLElement) {
 
 export function toURL(tab: Tab): string | null {
   switch (tab.type) {
-    case 'articlefind':
+    case 'find':
       return tab.data;
     case 'article':
       return tab.data;

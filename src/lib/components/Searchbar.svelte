@@ -10,7 +10,7 @@
       let newTabs = $tabs;
       const newTab: Tab = {
         id: next(),
-        type: 'articlefind',
+        type: 'find',
         data: query.toLowerCase().replaceAll(' ', '-')
       };
       newTabs.push(newTab);

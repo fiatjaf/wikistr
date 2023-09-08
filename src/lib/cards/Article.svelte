@@ -29,7 +29,7 @@
     elements.forEach((element) => {
       element.addEventListener('click', () => {
         let title = element.id.slice(12);
-        createChild({ id: next(), type: 'articlefind', data: title });
+        createChild({ id: next(), type: 'find', data: title });
       });
     });
   }
@@ -58,7 +58,7 @@
   function seeOthers(ev: MouseEvent) {
     let nextTab: SearchTab = {
       id: next(),
-      type: 'articlefind',
+      type: 'find',
       data: event?.tags.find(([k]) => k === 'd')?.[1] || ''
     };
     if (ev.button === 1) createChild(nextTab);
