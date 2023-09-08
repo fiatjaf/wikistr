@@ -13,7 +13,6 @@
   import type { SearchTab, Tab } from '$lib/types';
   import { page } from '$app/stores';
   import UserLabel from '$components/UserLabel.svelte';
-  import { track } from '$lib/labels';
 
   export let eventId: string;
   export let tab: Tab;
@@ -79,7 +78,6 @@
       const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
       if (state.data?.length) {
         event = state.data[0];
-        track(event);
         cancel();
       }
     }
