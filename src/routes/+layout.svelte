@@ -7,8 +7,7 @@
 </script>
 
 <svelte:head>
-  <title>WikiNostr</title>
-  <meta name="description" content={`A "wikipedia" client for nostr`} />
+  <title>wikistr</title>
 </svelte:head>
 
 <div class="flex overflow-x-scroll pb-2 scroll-smooth">
