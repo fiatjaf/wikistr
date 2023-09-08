@@ -10,7 +10,7 @@
   } from '@snort/system';
 
   import { system, wikiKind } from '$lib/nostr';
-  import { track } from '$lib/labels';
+  import { people, articles, track } from '$lib/labels';
   import type { ArticleTab, Tab } from '$lib/types';
   import UserLabel from '$components/UserLabel.svelte';
   import { next } from '$lib/utils';
@@ -54,6 +54,14 @@
   <div class="prose">
     <h1 class="mt-0">Recent Articles</h1>
   </div>
+  <br />
+  <br />
+  {JSON.stringify($people)}
+  <br />
+  <br />
+  {JSON.stringify($articles)}
+  <br />
+  <br />
   {#each results as result}
     <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
     <div

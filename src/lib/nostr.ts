@@ -3,10 +3,9 @@ import {
   EventPublisher,
   Nip7Signer,
   UserRelaysCache,
-  UserProfileCache,
+  UserProfileCache
 } from '@snort/system';
 
-export const reactionKind = 7;
 export const labelKind = 1985;
 export const wikiKind = 30818;
 
