@@ -1,13 +1,8 @@
 <script lang="ts">
   import { afterUpdate, onMount } from 'svelte';
-  import {
-    type NostrEvent,
-    NoteCollection,
-    RequestBuilder,
-    type StoreSnapshot
-  } from '@snort/system';
+  import type { Event } from 'nostr-tools';
 
-  import { system } from '$lib/nostr';
+  import { cachingSub, cachedArticles, userPreferredRelays } from '$lib/nostr';
   import { formatDate, next } from '$lib/utils';
   import { parse } from '$lib/articleParser.js';
   import type { SearchTab, Tab } from '$lib/types';
@@ -18,7 +13,7 @@
   export let tab: Tab;
   export let createChild: (tab: Tab) => void;
   export let replaceSelf: (tab: Tab) => void;
-  let event: NostrEvent | null = null;
+  let event: Event | null = null;
   let copied = false;
 
   $: title = event?.tags.find(([k]) => k === 'title')?.[1] || '';
@@ -66,26 +61,20 @@
   }
 
   onMount(() => {
-    const rb = new RequestBuilder('article:' + eventId);
-    rb.withFilter().ids([eventId]);
+    let cached = cachedArticles.get(eventId);
+    if (cached) {
+      event = cached;
+      return;
+    }
 
-    const q = system.Query(NoteCollection, rb);
-    const release = q.feed.hook(handleUpdate);
-    handleUpdate();
-    return cancel;
-
-    function handleUpdate() {
-      const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
-      if (state.data?.length) {
-        event = state.data[0];
-        cancel();
+    return cachingSub(
+      `article-${eventId.slice(-8)}`,
+      $userPreferredRelays,
+      { ids: [eventId] },
+      (result) => {
+        event = result[0];
       }
-    }
-
-    function cancel() {
-      release();
-      q.cancel();
-    }
+    );
   });
 
   afterUpdate(() => {

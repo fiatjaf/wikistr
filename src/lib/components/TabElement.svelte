@@ -9,6 +9,7 @@
   import RecentArticles from '$cards/RecentArticles.svelte';
   import Search from '$cards/Search.svelte';
   import Settings from '$cards/Settings.svelte';
+  import Relay from '$cards/Relay.svelte';
 
   export let tab: Tab;
 
@@ -113,6 +114,8 @@
     <Search {createChild} {replaceSelf} query={tab.data} {tab} />
   {:else if tab.type === 'welcome'}
     <RecentArticles {createChild} {replaceSelf} />
+  {:else if tab.type === 'relay'}
+    <Relay {createChild} {replaceSelf} {tab} />
   {:else if tab.type === 'settings'}
     <Settings />
   {:else if tab.type === 'editor'}

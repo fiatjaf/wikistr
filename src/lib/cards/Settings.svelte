@@ -1,49 +1,11 @@
 <script lang="ts">
-  import { getStaticRelays, saveStaticRelays } from '$lib/nostr';
-
-  let relays = getStaticRelays();
-  let newRelay = '';
-
-  function removeRelay(index: number) {
-    relays.splice(index, 1);
-    relays = [...relays];
-  }
-
-  function addRelay() {
-    if (newRelay) {
-      relays.push(newRelay);
-      newRelay = '';
-      relays = [...relays];
-    }
-  }
-
-  function saveData() {
-    addRelay();
-    saveStaticRelays(relays);
-    setTimeout(() => {
-      window.location.href = '';
-    }, 1);
-  }
+  function saveData() {}
 </script>
 
 <div class="mx-4 mt-4 w-5/6">
-  <!-- Relay Selection -->
   <div class="mb-6">
-    <p class="text-sm">Relays</p>
-    {#each relays as relay, index}
-      <div>
-        <button class="text-red-500" on:click={() => removeRelay(index)}> - </button>
-        {relay}
-      </div>
-    {/each}
-    <div>
-      <button on:click={addRelay} class="text-green-500"> + </button>
-      <input
-        bind:value={newRelay}
-        type="text"
-        class="inline shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
-        placeholder="wss://relay.example.com"
-      />
+    <div class="prose">
+      <h1 class="mt-0">Settings</h1>
     </div>
   </div>
 

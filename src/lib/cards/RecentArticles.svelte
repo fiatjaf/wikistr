@@ -1,47 +1,31 @@
 <script lang="ts">
   import { parsePlainText } from '$lib/articleParser';
   import { onMount } from 'svelte';
-  import {
-    type TaggedNostrEvent,
-    type StoreSnapshot,
-    NoteCollection,
-    RequestBuilder,
-    EventKind
-  } from '@snort/system';
+  import type { Event } from 'nostr-tools';
 
-  import { system, wikiKind } from '$lib/nostr';
+  import { cachingSub, userPreferredRelays, getA, wikiKind } from '$lib/nostr';
   import type { ArticleTab, Tab } from '$lib/types';
   import UserLabel from '$components/UserLabel.svelte';
   import { next } from '$lib/utils';
 
-  let results: TaggedNostrEvent[] = [];
+  let results: Event[] = [];
   export let createChild: (tab: Tab) => void;
   export let replaceSelf: (tab: Tab) => void;
 
   onMount(() => {
-    const rb = new RequestBuilder('recent');
-    rb.withFilter()
-      .kinds([wikiKind as EventKind])
-      .limit(12);
-
-    const q = system.Query(NoteCollection, rb);
-    const release = q.feed.hook(handleUpdate);
-    handleUpdate();
-
-    return () => {
-      release();
-      q.cancel();
-    };
-
-    function handleUpdate() {
-      const state = q.feed.snapshot as StoreSnapshot<ReturnType<NoteCollection['getSnapshotData']>>;
-      if (state.data) {
-        results = state.data.concat();
-      }
+    return cachingSub(
+      'recent',
+      $userPreferredRelays,
+      { kinds: [wikiKind], limit: 12 },
+      handleUpdate,
+      getA
+    );
+    function handleUpdate(events: Event[]) {
+      results = events;
     }
   });
 
-  function openArticle(result: TaggedNostrEvent, ev: MouseEvent) {
+  function openArticle(result: Event, ev: MouseEvent) {
     let articleTab: ArticleTab = { id: next(), type: 'article', data: result.id };
     if (ev.button === 1) createChild(articleTab);
     else replaceSelf(articleTab);

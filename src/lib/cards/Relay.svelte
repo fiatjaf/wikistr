@@ -2,51 +2,29 @@
   import { onMount } from 'svelte';
   import type { Event } from 'nostr-tools';
 
-  import { cachingSub, getA, getRelaysForEvent, userPreferredRelays, wikiKind } from '$lib/nostr';
-  import type { ArticleTab, RelayTab, Tab } from '$lib/types';
+  import type { ArticleTab, Tab } from '$lib/types';
   import { parsePlainText } from '$lib/articleParser';
   import UserLabel from '$components/UserLabel.svelte';
   import { next } from '$lib/utils';
 
-  export let query: string;
   export let tab: Tab;
   export let replaceSelf: (tab: Tab) => void;
   export let createChild: (tab: Tab) => void;
   let results: Event[] = [];
   let tried = false;
 
-  onMount(() => {
-    setTimeout(() => {
-      tried = true;
-    }, 1000);
-    return cachingSub(
-      `search-${query}`,
-      $userPreferredRelays,
-      { kinds: [wikiKind], '#d': [query.toLowerCase()], limit: 25 },
-      handleUpdate,
-      getA
-    );
-    function handleUpdate(events: Event[]) {
-      results = events;
-    }
-  });
+  onMount(() => {});
 
   function openArticle(result: Event, ev: MouseEvent) {
     let articleTab: ArticleTab = { id: next(), type: 'article', data: result.id };
     if (ev.button === 1) createChild(articleTab);
     else replaceSelf(articleTab);
   }
-
-  function openRelay(relay: string, ev: MouseEvent) {
-    let relayTab: RelayTab = { id: next(), type: 'relay', data: relay };
-    if (ev.button === 1) createChild(relayTab);
-    else replaceSelf(relayTab);
-  }
 </script>
 
 <div class="font-sans mx-auto p-6 lg:max-w-4xl lg:pt-6 lg:pb-28">
   <div class="prose">
-    <h1 class="mb-0">"{query}"</h1>
+    <h1 class="mb-0">{tab.data}</h1>
   </div>
   {#each results as result}
     <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
@@ -61,13 +39,6 @@
         <span>
           by <UserLabel pubkey={result.pubkey} />
         </span>
-        <div class="text-indigo-900 drop-shadow">
-          {#each getRelaysForEvent(result) as r}
-            <span on:mouseup|preventDefault={openRelay.bind(null, r)} class="cursor-pointer"
-              >{new URL(r).host}</span
-            >
-          {/each}
-        </div>
       </div>
       <p class="text-xs">
         {#if result.tags.find((e) => e[0] == 'summary')?.[0] && result.tags.find((e) => e[0] == 'summary')?.[1]}
@@ -87,23 +58,7 @@
   {/each}
   {#if tried}
     <div class="px-4 py-5 bg-white border border-gray-300 rounded-lg mt-2 min-h-[48px]">
-      <p class="mb-2">
-        {results.length < 1 ? "Can't find this article" : "Didn't find what you are looking for?"}
-      </p>
-      <button
-        on:click={() => {
-          replaceSelf({ id: next(), type: 'editor', data: { title: query, previous: tab } });
-        }}
-        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-      >
-        Create this article!
-      </button>
-      <button
-        on:click={() => createChild({ id: next(), type: 'settings' })}
-        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-      >
-        Add more relays
-      </button>
+      <p class="mb-2">No articles found in this relay.</p>
     </div>
   {:else}
     <div class="px-4 py-5 rounded-lg mt-2 min-h-[48px]">Loading...</div>

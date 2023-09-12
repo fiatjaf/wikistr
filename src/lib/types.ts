@@ -1,4 +1,4 @@
-export type TabType = 'welcome' | 'find' | 'article' | 'settings' | 'editor';
+export type TabType = 'welcome' | 'find' | 'article' | 'relay' | 'settings' | 'editor';
 
 export interface Tab {
   id: number;
@@ -26,6 +26,13 @@ export type ArticleTab = {
   type: TabType;
   parent?: number;
   data: string; // event id
+};
+
+export type RelayTab = {
+  id: number;
+  type: TabType;
+  parent?: number;
+  data: string; // relay url
 };
 
 export type SettingsTab = {

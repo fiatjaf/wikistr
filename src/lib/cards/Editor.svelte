@@ -1,33 +1,41 @@
 <script lang="ts">
-  import { EventBuilder, EventKind } from '@snort/system';
-
-  import { signer, system, wikiKind } from '$lib/nostr';
+  import { wikiKind, broadcast, userPreferredRelays } from '$lib/nostr';
   import type { EditorData, Tab } from '$lib/types.ts';
   import { next } from '$lib/utils';
+  import type { EventTemplate } from 'nostr-tools';
 
   export let replaceSelf: (tab: Tab) => void;
   export let data: EditorData;
 
-  let error: string | undefined;
+  let message: string | undefined;
 
   async function publish() {
-    try {
-      let eb = new EventBuilder()
-        .kind(wikiKind as EventKind)
-        .content(data.content)
-        .tag(['d', data.title.toLowerCase().replaceAll(' ', '-')])
-        .tag(['title', data.title]);
-      if (data.summary) eb = eb.tag(['summary', data.summary]);
-      let event = await eb.buildAndSign(signer);
-      system.BroadcastEvent(event);
+    let eventTemplate: EventTemplate = {
+      kind: wikiKind,
+      tags: [['d', data.title.toLowerCase().replaceAll(' ', '-')]],
+      content: data.content,
+      created_at: Math.round(Date.now() / 1000)
+    };
+    if (data.summary) eventTemplate.tags.push(['summary', data.summary]);
 
-      setTimeout(() => {
-        replaceSelf({ id: next(), type: 'article', data: event.id });
-      }, 1400);
-    } catch (err) {
-      console.warn('failed to publish event', error);
-      error = String(err);
+    let { event, successes, failures, error } = await broadcast(
+      eventTemplate,
+      $userPreferredRelays
+    );
+    if (successes.length === 0) {
+      message = `Failed to publish: ${error}.`;
+      return;
+    } else if (failures.length === 0) {
+      message = `Successfully published to ${successes.join(', ')}`;
+    } else {
+      message = `Successfully published to ${successes.join(
+        ', '
+      )} -- but failed to publish to ${failures.join(', ')}`;
     }
+
+    setTimeout(() => {
+      replaceSelf({ id: next(), type: 'article', data: event?.id });
+    }, 1400);
   }
 </script>
 
@@ -72,7 +80,13 @@
   </div>
 
   <!-- Submit -->
-  {#if !error}
+  {#if message}
+    <div>
+      <p>
+        {message}
+      </p>
+    </div>
+  {:else}
     <div class="mt-2">
       <button
         on:click={publish}
@@ -81,13 +95,4 @@
       >
     </div>
   {/if}
-
-  <div>
-    {#if error}
-      <p>Something went wrong:</p>
-      <p>
-        {error}
-      </p>
-    {/if}
-  </div>
 </div>

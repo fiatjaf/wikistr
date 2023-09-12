@@ -1,35 +1,18 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { nip19 } from 'nostr-tools';
-  import type { MetadataCache } from '@snort/system';
 
-  import { system } from '$lib/nostr';
+  import { getMetadata, type Metadata } from '$lib/nostr';
 
   export let pubkey: string;
-  let metadata: MetadataCache;
+  let metadata: Metadata;
   let npub = nip19.npubEncode(pubkey);
 
   $: name = metadata?.name && metadata.name.trim() !== '' ? metadata.name : npub.slice(0, 11);
   $: picture = metadata?.picture;
 
-  onMount(() => {
-    system.ProfileLoader.TrackMetadata(pubkey);
-    handleResult();
-
-    const release = system.ProfileLoader.Cache.hook(() => {
-      handleResult();
-      system.ProfileLoader.UntrackMetadata(pubkey);
-      release();
-    }, pubkey);
-
-    function handleResult() {
-      let val = system.ProfileLoader.Cache.getFromCache(pubkey);
-      if (val) {
-        metadata = val;
-      }
-    }
-
-    return release;
+  onMount(async () => {
+    metadata = await getMetadata(pubkey);
   });
 </script>
 
