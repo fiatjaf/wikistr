@@ -6,6 +6,7 @@
   import { parsePlainText } from '$lib/articleParser';
   import UserLabel from '$components/UserLabel.svelte';
   import { next } from '$lib/utils';
+  import { cachingSub, getA, wikiKind } from '$lib/nostr';
 
   export let tab: Tab;
   export let replaceSelf: (tab: Tab) => void;
@@ -13,7 +14,18 @@
   let results: Event[] = [];
   let tried = false;
 
-  onMount(() => {});
+  onMount(() => {
+    return cachingSub(
+      `relay-${tab.data}`,
+      tab.data,
+      { kinds: [wikiKind], limit: 25 },
+      handleUpdate,
+      getA
+    );
+    function handleUpdate(events: Event[]) {
+      results = events;
+    }
+  });
 
   function openArticle(result: Event, ev: MouseEvent) {
     let articleTab: ArticleTab = { id: next(), type: 'article', data: result.id };

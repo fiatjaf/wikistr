@@ -152,7 +152,7 @@ export function cachingSub(
   relays: string[],
   filter: Filter,
   hook: HookFunc,
-  keyfn: KeyFunc | null = null
+  keyfn: KeyFunc = (event: Event) => event.id
 ): CancelFunc {
   const invokeHook = debounce(() => {
     const s = _subscriptions[name];
@@ -178,10 +178,6 @@ export function cachingSub(
   const cache = new Map<string, Event>();
   _subscriptions[name] = { cache, hook, cancel };
 
-  if (!keyfn) {
-    keyfn = (event) => event.id;
-  }
-
   relays.forEach(async (url) => {
     const r = await ensureRelay(url);
     const subscription = r.sub([filter], {
@@ -189,7 +185,16 @@ export function cachingSub(
       alreadyHaveEvent: (id, relay) => {
         const event = cachedArticles.get(id);
         if (event) {
+          // we already have this event, so no need to parse it again
           cacheSeenOn(event, relay);
+
+          // if we didn't have this in the cache yet we add it then trigger the hook
+          const k = keyfn(event);
+          if (!cache.has(k)) {
+            cache.set(k, event);
+            invokeHook();
+          }
+
           return true;
         }
         return false;
@@ -199,7 +204,7 @@ export function cachingSub(
     subs.push(subscription);
 
     subscription.on('event', (event) => {
-      _subscriptions[name]?.cache?.set?.(event.id, event);
+      _subscriptions[name]?.cache?.set?.(keyfn(event), event);
       if (event.kind === wikiKind) {
         if (!cachedArticles.has(event.id)) {
           // only set if not already set otherwise we lose the seenOn stuff
