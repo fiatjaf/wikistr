@@ -72,6 +72,8 @@ export function toURL(tab: Tab): string | null {
       return tab.data;
     case 'article':
       return tab.data;
+    case 'relay':
+      return encodeURIComponent(tab.data);
   }
   return null;
 }

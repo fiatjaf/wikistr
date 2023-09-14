@@ -8,17 +8,20 @@
   onMount(() => {
     if ($tabs.length !== 0) return;
 
-    if ($page.params.path.length === 0) {
-      $tabs.push({ id: next(), type: 'welcome' });
-    } else {
-      $page.params.path.split('/').forEach((item: string) => {
-        if (item.match(/^[a-f0-9]{64}$/)) {
+    $tabs.push({ id: next(), type: 'welcome' });
+    $page.url.pathname
+      .slice(1)
+      .split('/')
+      .forEach((item: string) => {
+        let ditem = decodeURIComponent(item);
+        if (ditem.startsWith('wss://') || ditem.startsWith('ws://')) {
+          $tabs.push({ id: next(), type: 'relay', data: ditem });
+        } else if (item.match(/^[a-f0-9]{64}$/)) {
           $tabs.push({ id: next(), type: 'article', data: item });
         } else {
           $tabs.push({ id: next(), type: 'find', data: item });
         }
       });
-    }
 
     tabs.set($tabs);
 
