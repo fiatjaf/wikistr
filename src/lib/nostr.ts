@@ -37,12 +37,36 @@ const _seenOn = new WeakMap<Event, Set<string>>();
 
 export const cachedArticles = new Map<string, Event>();
 
-const signer = {
-  signEvent: (event: EventTemplate): Promise<Event> => {
+export const signer = {
+  getPublicKey: async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (window as any).nostr.signEvent(event);
+    const pubkey = await (window as any).nostr.getPublicKey();
+    setAccount(await getMetadata(pubkey));
+    return pubkey;
+  },
+  signEvent: async (event: EventTemplate): Promise<Event> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const se: Event = await (window as any).nostr.signEvent(event);
+    setAccount(await getMetadata(se.pubkey));
+    return se;
   }
 };
+
+let setAccount: (_: Metadata) => void;
+export const account = readable<Metadata | null>(null, (set) => {
+  setAccount = (account: Metadata) => {
+    localStorage.setItem('loggedin', JSON.stringify(account));
+    set(account);
+  };
+
+  // try to load account from localStorage on startup
+  const data = localStorage.getItem('loggedin');
+  try {
+    set(JSON.parse(data || ''));
+  } catch (err) {
+    /***/
+  }
+});
 
 export const fallback = [
   'wss://relay.damus.io',
@@ -199,6 +223,8 @@ function cacheSeenOn(event: Event, relay: string) {
 export async function getMetadata(pubkey: string): Promise<Metadata> {
   let metadata = _metadataCache.get(pubkey);
   if (metadata) return metadata;
+
+  // TODO: use dexie as a second-level cache
 
   metadata = await new Promise<Metadata>((resolve) => {
     let ongoing = profiles.length;

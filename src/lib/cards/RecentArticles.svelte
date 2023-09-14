@@ -1,16 +1,15 @@
 <script lang="ts">
   import { parsePlainText } from '$lib/articleParser';
   import { onMount } from 'svelte';
-  import type { Event } from 'nostr-tools';
+  import { nip19, type Event } from 'nostr-tools';
 
-  import { cachingSub, userPreferredRelays, getA, wikiKind } from '$lib/nostr';
-  import type { ArticleTab, Tab } from '$lib/types';
+  import { cachingSub, signer, userPreferredRelays, getA, wikiKind, account } from '$lib/nostr';
+  import type { Tab } from '$lib/types';
   import UserLabel from '$components/UserLabel.svelte';
   import { next } from '$lib/utils';
 
   let results: Event[] = [];
   export let createChild: (tab: Tab) => void;
-  export let replaceSelf: (tab: Tab) => void;
 
   onMount(() => {
     return cachingSub(
@@ -25,14 +24,39 @@
     }
   });
 
-  function openArticle(result: Event, ev: MouseEvent) {
-    let articleTab: ArticleTab = { id: next(), type: 'article', data: result.id };
-    if (ev.button === 1) createChild(articleTab);
-    else replaceSelf(articleTab);
+  function openArticle(result: Event) {
+    createChild({ id: next(), type: 'article', data: result.id });
+  }
+
+  function doLogin() {
+    signer.getPublicKey();
   }
 </script>
 
 <div class="font-sans mx-auto p-6 lg:max-w-4xl lg:pt-6 lg:pb-28">
+  <div class="prose">
+    <h1 class="mt-0">Account</h1>
+  </div>
+  <div class="mb-4 mt-2">
+    {#if $account}
+      <div class="flex h-12">
+        {#if $account.picture}
+          <img class="full-h" src={$account.picture} alt="user avatar" />
+        {/if}
+        <div class="ml-2">
+          <p class="w-64 text-ellipsis overflow-hidden">{nip19.npubEncode($account.pubkey)}</p>
+          <p>{$account.name}</p>
+        </div>
+      </div>
+    {:else}
+      <button
+        on:click={doLogin}
+        type="submit"
+        class="relative inline-flex items-center space-x-2 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-white"
+        >Login</button
+      >
+    {/if}
+  </div>
   <div class="prose">
     <h1 class="mt-0">Recent Articles</h1>
   </div>

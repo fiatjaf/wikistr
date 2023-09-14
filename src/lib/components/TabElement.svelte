@@ -113,7 +113,7 @@
   {:else if tab.type === 'find'}
     <Search {createChild} {replaceSelf} query={tab.data} {tab} />
   {:else if tab.type === 'welcome'}
-    <RecentArticles {createChild} {replaceSelf} />
+    <RecentArticles {createChild} />
   {:else if tab.type === 'relay'}
     <Relay {createChild} {replaceSelf} {tab} />
   {:else if tab.type === 'settings'}
