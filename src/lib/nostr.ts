@@ -111,7 +111,7 @@ async function ensureRelay(url: string): Promise<Relay> {
 }
 
 export function getRelaysForEvent(event: Event): Iterable<string> {
-  return _seenOn.get(event)?.values() || [];
+  return _seenOn.get(event)?.keys() || [];
 }
 
 export async function broadcast(
@@ -222,7 +222,7 @@ export function cachingSub(
 function cacheSeenOn(event: Event, relay: string) {
   const relays = _seenOn.get(event) || new Set();
   _seenOn.set(event, relays);
-  relays.add(relay);
+  relays.add(utils.normalizeURL(relay));
 }
 
 export async function getMetadata(pubkey: string): Promise<Metadata> {

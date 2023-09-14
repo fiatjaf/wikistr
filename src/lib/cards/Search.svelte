@@ -2,8 +2,8 @@
   import { onMount } from 'svelte';
   import type { Event } from 'nostr-tools';
 
-  import { cachingSub, getA, getRelaysForEvent, userPreferredRelays, wikiKind } from '$lib/nostr';
-  import type { ArticleTab, RelayTab, Tab } from '$lib/types';
+  import { cachingSub, getA, userPreferredRelays, wikiKind } from '$lib/nostr';
+  import type { ArticleTab, Tab } from '$lib/types';
   import { parsePlainText } from '$lib/articleParser';
   import UserLabel from '$components/UserLabel.svelte';
   import { next } from '$lib/utils';
@@ -18,29 +18,22 @@
   onMount(() => {
     setTimeout(() => {
       tried = true;
-    }, 1000);
+    }, 1500);
     return cachingSub(
       `search-${query}`,
       $userPreferredRelays,
       { kinds: [wikiKind], '#d': [query.toLowerCase()], limit: 25 },
-      handleUpdate,
+      (events) => {
+        results = events;
+      },
       getA
     );
-    function handleUpdate(events: Event[]) {
-      results = events;
-    }
   });
 
   function openArticle(result: Event, ev: MouseEvent) {
     let articleTab: ArticleTab = { id: next(), type: 'article', data: result.id };
     if (ev.button === 1) createChild(articleTab);
     else replaceSelf(articleTab);
-  }
-
-  function openRelay(relay: string, ev: MouseEvent) {
-    let relayTab: RelayTab = { id: next(), type: 'relay', data: relay };
-    if (ev.button === 1) createChild(relayTab);
-    else replaceSelf(relayTab);
   }
 </script>
 
@@ -61,13 +54,6 @@
         <span>
           by <UserLabel pubkey={result.pubkey} />
         </span>
-        <div class="text-indigo-900 drop-shadow">
-          {#each getRelaysForEvent(result) as r}
-            <span on:mouseup|preventDefault={openRelay.bind(null, r)} class="cursor-pointer"
-              >{new URL(r).host}</span
-            >
-          {/each}
-        </div>
       </div>
       <p class="text-xs">
         {#if result.tags.find((e) => e[0] == 'summary')?.[0] && result.tags.find((e) => e[0] == 'summary')?.[1]}

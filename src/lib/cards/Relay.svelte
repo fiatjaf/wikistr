@@ -15,16 +15,20 @@
   let tried = false;
 
   onMount(() => {
+    setTimeout(() => {
+      tried = true;
+    }, 1500);
+
     return cachingSub(
       `relay-${tab.data}`,
-      tab.data,
+      [tab.data],
       { kinds: [wikiKind], limit: 25 },
-      handleUpdate,
+      (events) => {
+        tried = true;
+        results = events;
+      },
       getA
     );
-    function handleUpdate(events: Event[]) {
-      results = events;
-    }
   });
 
   function openArticle(result: Event, ev: MouseEvent) {
@@ -68,11 +72,11 @@
       </p>
     </div>
   {/each}
-  {#if tried}
+  {#if tried && results.length === 0}
     <div class="px-4 py-5 bg-white border border-gray-300 rounded-lg mt-2 min-h-[48px]">
       <p class="mb-2">No articles found in this relay.</p>
     </div>
-  {:else}
+  {:else if !tried}
     <div class="px-4 py-5 rounded-lg mt-2 min-h-[48px]">Loading...</div>
   {/if}
 </div>

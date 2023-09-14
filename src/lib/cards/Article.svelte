@@ -2,10 +2,10 @@
   import { afterUpdate, onMount } from 'svelte';
   import type { Event } from 'nostr-tools';
 
-  import { cachingSub, cachedArticles, userPreferredRelays } from '$lib/nostr';
+  import { cachingSub, cachedArticles, userPreferredRelays, getRelaysForEvent } from '$lib/nostr';
   import { formatDate, next } from '$lib/utils';
   import { parse } from '$lib/articleParser.js';
-  import type { SearchTab, Tab } from '$lib/types';
+  import type { RelayTab, SearchTab, Tab } from '$lib/types';
   import { page } from '$app/stores';
   import UserLabel from '$components/UserLabel.svelte';
 
@@ -60,6 +60,13 @@
     else replaceSelf(nextTab);
   }
 
+  function openRelay(relay: string, ev: MouseEvent) {
+    console.log('navigating to', relay);
+    let relayTab: RelayTab = { id: next(), type: 'relay', data: relay };
+    if (ev.button === 1) createChild(relayTab);
+    else replaceSelf(relayTab);
+  }
+
   onMount(() => {
     let cached = cachedArticles.get(eventId);
     if (cached) {
@@ -109,11 +116,19 @@
           >{#if copied}Copied!{:else}Share{/if}</a
         >
         &nbsp;• &nbsp;
-        <a class="cursor-pointer" on:mouseup|preventDefault={seeOthers}>Others</a>
+        <a class="cursor-pointer" on:mouseup|preventDefault={seeOthers}>Versions</a>
       </span>
 
       <!-- Content -->
       {@html parse(event?.content)}
+
+      <div class="mt-4 text-indigo-900 drop-shadow">
+        {#each getRelaysForEvent(event) as r}
+          <span on:mouseup|preventDefault={openRelay.bind(null, r)} class="block cursor-pointer"
+            >{new URL(r).host}</span
+          >
+        {/each}
+      </div>
     {/if}
   </article>
 </div>
