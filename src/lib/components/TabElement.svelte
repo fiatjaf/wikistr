@@ -6,7 +6,7 @@
   import { scrollTabIntoView, isElementInViewport, toURL } from '$lib/utils';
   import Article from '$cards/Article.svelte';
   import Editor from '$cards/Editor.svelte';
-  import RecentArticles from '$cards/RecentArticles.svelte';
+  import Welcome from '$cards/Welcome.svelte';
   import Search from '$cards/Search.svelte';
   import Settings from '$cards/Settings.svelte';
   import Relay from '$cards/Relay.svelte';
@@ -113,7 +113,7 @@
   {:else if tab.type === 'find'}
     <Search {createChild} {replaceSelf} query={tab.data} {tab} />
   {:else if tab.type === 'welcome'}
-    <RecentArticles {createChild} />
+    <Welcome {createChild} />
   {:else if tab.type === 'relay'}
     <Relay {createChild} {replaceSelf} {tab} />
   {:else if tab.type === 'settings'}
