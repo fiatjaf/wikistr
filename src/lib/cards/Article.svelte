@@ -1,8 +1,17 @@
 <script lang="ts">
   import { afterUpdate, onMount } from 'svelte';
-  import type { Event } from 'nostr-tools';
+  import type { Event, EventTemplate } from 'nostr-tools';
 
-  import { cachingSub, cachedArticles, userPreferredRelays, getRelaysForEvent } from '$lib/nostr';
+  import {
+    account,
+    cachingSub,
+    cachedArticles,
+    userPreferredRelays,
+    getRelaysForEvent,
+    reactionKind,
+    broadcast,
+    getA
+  } from '$lib/nostr';
   import { formatDate, next } from '$lib/utils';
   import { parse } from '$lib/articleParser.js';
   import type { RelayTab, SearchTab, Tab } from '$lib/types';
@@ -15,7 +24,11 @@
   export let replaceSelf: (tab: Tab) => void;
   let event: Event | null = null;
   let copied = false;
+  let liked = false;
+  let disliked = false;
+  let canLike: boolean | undefined;
 
+  $: dTag = event?.tags.find(([k]) => k === 'd')?.[1] || '';
   $: title = event?.tags.find(([k]) => k === 'title')?.[1] || '';
   $: summary = event?.tags.find(([k]) => k === 'summary')?.[1];
 
@@ -54,7 +67,7 @@
     let nextTab: SearchTab = {
       id: next(),
       type: 'find',
-      data: event?.tags.find(([k]) => k === 'd')?.[1] || ''
+      data: dTag
     };
     if (ev.button === 1) createChild(nextTab);
     else replaceSelf(nextTab);
@@ -69,6 +82,7 @@
     let cached = cachedArticles.get(eventId);
     if (cached) {
       event = cached;
+      onArticle();
       return;
     }
 
@@ -78,13 +92,78 @@
       { ids: [eventId] },
       (result) => {
         event = result[0];
+        onArticle();
       }
     );
   });
 
+  onMount(() => {
+    return account.subscribe(onArticle);
+  });
+
+  let cancelers: Array<() => void> = [];
+  onMount(() => {
+    return () => {
+      cancelers.forEach((fn) => fn());
+    };
+  });
+
+  function onArticle() {
+    if (!event) return;
+    if (!$account) return;
+
+    if ($account.pubkey === event.pubkey) {
+      canLike = false;
+    }
+
+    setTimeout(() => {
+      if (canLike === undefined) {
+        canLike = true;
+      }
+    }, 2500);
+
+    cancelers.push(
+      cachingSub(
+        `reaction-${eventId.slice(-8)}`,
+        $userPreferredRelays,
+        { authors: [$account.pubkey], ['#a']: [getA(event)] },
+        (result) => {
+          canLike = false;
+
+          switch (result[0]?.content) {
+            case '+':
+              liked = true;
+              break;
+            case '-':
+              disliked = true;
+              break;
+          }
+        }
+      )
+    );
+  }
+
   afterUpdate(() => {
     addClickListenerToWikilinks();
   });
+
+  function vote(v: '+' | '-') {
+    if (!event) return;
+    if (!canLike) return;
+
+    let relays = Array.from(getRelaysForEvent(event));
+    let eventTemplate: EventTemplate = {
+      kind: reactionKind,
+      tags: [
+        ['a', getA(event), relays[0] || ''],
+        ['e', event.id, relays[1] || relays[0] || '']
+      ],
+      content: v,
+      created_at: Math.round(Date.now() / 1000)
+    };
+
+    broadcast(eventTemplate, $userPreferredRelays);
+  }
 </script>
 
 <div>
@@ -95,27 +174,66 @@
     {#if event === null}
       Loading article {eventId}
     {:else}
-      <h1 class="mb-0">
-        {#if event?.tags.find((e) => e[0] == 'title')?.[0] && event?.tags.find((e) => e[0] == 'title')?.[1]}
-          {event.tags.find((e) => e[0] == 'title')?.[1]}
-        {:else}
-          {event.tags.find((e) => e[0] == 'd')?.[1]}
-        {/if}
-      </h1>
-      <span>
-        by <UserLabel pubkey={event.pubkey} />
-        {#if event.created_at}
-          on {formatDate(event.created_at)}
-        {/if}
-        <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
-        <br /><a class="cursor-pointer" on:click={edit}>Fork</a>
-        &nbsp;• &nbsp;
-        <a class="cursor-pointer" on:click={shareCopy}
-          >{#if copied}Copied!{:else}Share{/if}</a
+      <div class="flex items-center">
+        <div
+          class="flex flex-col items-center space-y-2 mr-3"
+          class:hidden={$account?.pubkey === event.pubkey}
         >
-        &nbsp;• &nbsp;
-        <a class="cursor-pointer" on:mouseup|preventDefault={seeOthers}>Versions</a>
-      </span>
+          <a
+            title={canLike ? '' : liked ? 'you considered this a good article' : ''}
+            class:cursor-pointer={canLike}
+            on:click={() => vote('+')}
+          >
+            <svg
+              class:fill-stone-600={canLike}
+              class:fill-cyan-500={liked}
+              class:hidden={disliked}
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"><path d="M1 12h16L9 4l-8 8Z"></path></svg
+            >
+          </a>
+          <a
+            title={canLike
+              ? 'this is a bad article'
+              : disliked
+              ? 'you considered this a bad article'
+              : ''}
+            class:cursor-pointer={canLike}
+            on:click={() => vote('-')}
+          >
+            <svg
+              class:fill-stone-600={canLike}
+              class:fill-rose-400={disliked}
+              class:hidden={liked}
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"><path d="M1 6h16l-8 8-8-8Z"></path></svg
+            >
+          </a>
+        </div>
+        <div class="ml-2">
+          <h1 class="mb-0">
+            {title || dTag}
+          </h1>
+          <div>
+            by <UserLabel pubkey={event.pubkey} />
+            {#if event.created_at}
+              on {formatDate(event.created_at)}
+            {/if}
+            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
+          </div>
+          <div>
+            <a class="cursor-pointer" on:click={edit}>Fork</a>
+            &nbsp;• &nbsp;
+            <a class="cursor-pointer" on:click={shareCopy}>
+              {#if copied}Copied!{:else}Share{/if}
+            </a>
+            &nbsp;• &nbsp;
+            <a class="cursor-pointer" on:mouseup|preventDefault={seeOthers}>Versions</a>
+          </div>
+        </div>
+      </div>
 
       <!-- Content -->
       {@html parse(event?.content)}

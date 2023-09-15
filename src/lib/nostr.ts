@@ -27,6 +27,7 @@ export type Metadata = {
   picture?: string;
 };
 
+export const reactionKind = 7;
 export const labelKind = 1985;
 export const wikiKind = 30818;
 
@@ -92,8 +93,10 @@ export const userPreferredRelays = readable(safeRelays, (set) => {
   set(safeRelays);
 });
 
-export const getA: KeyFunc = (event: Event) =>
-  event.tags.find(([t, v]) => t === 'd' && v)?.[1] || '';
+export const getA: KeyFunc = (event: Event) => {
+  const dTag = event.tags.find(([t, v]) => t === 'd' && v)?.[1] || '';
+  return `${event.kind}:${event.pubkey}:${dTag}`;
+};
 
 async function ensureRelay(url: string): Promise<Relay> {
   const nm = utils.normalizeURL(url);
