@@ -60,11 +60,9 @@
     else replaceSelf(nextTab);
   }
 
-  function openRelay(relay: string, ev: MouseEvent) {
-    console.log('navigating to', relay);
+  function openRelay(relay: string) {
     let relayTab: RelayTab = { id: next(), type: 'relay', data: relay };
-    if (ev.button === 1) createChild(relayTab);
-    else replaceSelf(relayTab);
+    createChild(relayTab);
   }
 
   onMount(() => {
@@ -122,12 +120,17 @@
       <!-- Content -->
       {@html parse(event?.content)}
 
-      <div class="mt-4 text-indigo-900 drop-shadow">
-        {#each getRelaysForEvent(event) as r}
-          <span on:mouseup|preventDefault={openRelay.bind(null, r)} class="block cursor-pointer"
-            >{new URL(r).host}</span
-          >
-        {/each}
+      <div class="mt-4">
+        <h2 class="m-0 p-0">Found on relays</h2>
+        <ul class="list-disc m-0 pt-2 px-5">
+          {#each getRelaysForEvent(event) as r}
+            <li class="p-0 m-0 cursor-pointer">
+              <a on:mouseup|preventDefault={openRelay.bind(null, r)}>
+                {new URL(r).host}
+              </a>
+            </li>
+          {/each}
+        </ul>
       </div>
     {/if}
   </article>

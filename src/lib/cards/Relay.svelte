@@ -40,7 +40,7 @@
 
 <div class="font-sans mx-auto p-6 lg:max-w-4xl lg:pt-6 lg:pb-28">
   <div class="prose">
-    <h1 class="mb-0">{tab.data}</h1>
+    <h1 class="mb-0 break-all">{tab.data}</h1>
   </div>
   {#each results as result}
     <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
