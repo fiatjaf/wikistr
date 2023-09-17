@@ -7,6 +7,7 @@
     cachingSub,
     cachedArticles,
     userPreferredRelays,
+    fallback,
     getRelaysForEvent,
     reactionKind,
     broadcast,
@@ -88,7 +89,7 @@
 
     return cachingSub(
       `article-${eventId.slice(-8)}`,
-      $userPreferredRelays,
+      $userPreferredRelays.concat(fallback),
       { ids: [eventId] },
       (result) => {
         event = result[0];
