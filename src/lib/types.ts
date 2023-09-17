@@ -1,4 +1,4 @@
-export type TabType = 'welcome' | 'find' | 'article' | 'relay' | 'settings' | 'editor';
+export type TabType = 'welcome' | 'find' | 'article' | 'relay' | 'settings' | 'editor' | 'new';
 
 export interface Tab {
   id: number;

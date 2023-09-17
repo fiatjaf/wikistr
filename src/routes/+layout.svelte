@@ -3,9 +3,8 @@
 
   import '../app.postcss';
   import { tabs } from '$lib/state';
-  import { isElementInViewport, scrollTabIntoView, getParentCard } from '$lib/utils';
+  import { isElementInViewport, getParentCard } from '$lib/utils';
   import TabElement from '$components/TabElement.svelte';
-  import Searchbar from '$components/Searchbar.svelte';
 
   let dragging = false;
   let startX: number;
@@ -69,18 +68,5 @@
   <!-- this is just empty -->
   <slot />
 
-  <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
-  <div
-    id={`wikitab-special-search`}
-    class="
-overflow-y-auto
-overflow-x-hidden
-mx-2 p-4 mt-2
-min-w-[395px] max-w-[395px] lg:min-w-[32rem] lg:max-w-[32rem]
-rounded-lg border border-slate-500 bg-slate-50
-h-[calc(100vh_-_32px)]"
-    on:dblclick={(ev) => scrollTabIntoView(ev.currentTarget, false)}
-  >
-    <div class="p-6"><Searchbar /></div>
-  </div>
+  <TabElement tab={{ type: 'new', id: -1 }} />
 </div>
