@@ -2,7 +2,7 @@
   import { tabs } from '$lib/state';
   import TabElement from '$components/TabElement.svelte';
   import Searchbar from '$components/Searchbar.svelte';
-  import { scrollTabIntoView } from '$lib/utils';
+  import { isElementInViewport, scrollTabIntoView } from '$lib/utils';
   import '../app.postcss';
   import { onMount } from 'svelte';
 
@@ -28,7 +28,10 @@
       if (
         ev.target instanceof HTMLInputElement ||
         ev.target instanceof HTMLTextAreaElement ||
-        ev.target instanceof HTMLButtonElement
+        ev.target instanceof HTMLButtonElement ||
+        (ev.target instanceof HTMLElement &&
+          ev.target.parentElement?.classList.contains('prose') &&
+          isElementInViewport(ev.target.parentNode as HTMLElement))
       )
         return;
 
