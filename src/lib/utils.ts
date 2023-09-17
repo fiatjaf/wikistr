@@ -1,3 +1,4 @@
+import { mainPanelDragging } from './state';
 import type { Tab } from './types';
 
 export function formatDate(unixtimestamp: number) {
@@ -31,7 +32,14 @@ export function next(): number {
   return serial++;
 }
 
+let dontScroll = false;
+mainPanelDragging.subscribe((v) => {
+  dontScroll = v;
+});
+
 export function scrollTabIntoView(el: string | HTMLElement, wait: boolean) {
+  if (dontScroll) return;
+
   function scrollTab() {
     const element = typeof el === 'string' ? document.querySelector(`[id^="wikitab-${el}"]`) : el;
     if (!element) return;
@@ -75,4 +83,12 @@ export function toURL(tab: Tab): string | null {
       return encodeURIComponent(tab.data);
   }
   return null;
+}
+
+export function getParentCard(el: HTMLElement): HTMLElement | null {
+  let curr: HTMLElement | null = el;
+  while (curr && !curr.id?.startsWith('wikitab')) {
+    curr = curr.parentElement;
+  }
+  return curr;
 }

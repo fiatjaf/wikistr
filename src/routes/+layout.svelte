@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { tabs } from '$lib/state';
-  import TabElement from '$components/TabElement.svelte';
-  import Searchbar from '$components/Searchbar.svelte';
-  import { isElementInViewport, scrollTabIntoView } from '$lib/utils';
-  import '../app.postcss';
   import { onMount } from 'svelte';
 
-  let dragging = false;
+  import '../app.postcss';
+  import { tabs, mainPanelDragging } from '$lib/state';
+  import { isElementInViewport, scrollTabIntoView, getParentCard } from '$lib/utils';
+  import TabElement from '$components/TabElement.svelte';
+  import Searchbar from '$components/Searchbar.svelte';
+
   let startX: number;
   let scrollLeft: number;
 
@@ -25,33 +25,31 @@
 
     function onMouseDown(ev: MouseEvent) {
       if (!slider) return;
-      if (
-        ev.target instanceof HTMLInputElement ||
-        ev.target instanceof HTMLTextAreaElement ||
-        ev.target instanceof HTMLButtonElement ||
-        (ev.target instanceof HTMLElement &&
-          ev.target.parentElement?.classList.contains('prose') &&
-          isElementInViewport(ev.target.parentNode as HTMLElement))
-      )
-        return;
+
+      if (ev.target instanceof HTMLElement) {
+        let card = getParentCard(ev.target);
+        if (card && isElementInViewport(card)) return;
+      }
 
       ev.preventDefault();
-      dragging = true;
+      mainPanelDragging.set(true);
       startX = ev.clientX - slider.offsetLeft;
       scrollLeft = slider.scrollLeft;
     }
 
     function onMouseUp(ev: MouseEvent) {
-      if (dragging) {
+      console.log('mouseup:dragging', $mainPanelDragging);
+      if ($mainPanelDragging) {
         ev.preventDefault();
         ev.stopPropagation();
+        ev.stopImmediatePropagation();
       }
-      dragging = false;
+      mainPanelDragging.set(false);
     }
 
     function onMouseMove(ev: MouseEvent) {
       if (!slider) return;
-      if (!dragging) return;
+      if (!$mainPanelDragging) return;
       ev.preventDefault();
       slider.scrollLeft = scrollLeft + startX - ev.clientX;
     }

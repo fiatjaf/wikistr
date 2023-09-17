@@ -80,7 +80,7 @@
     }
   }
 
-  function handleClick(ev: { currentTarget: HTMLElement }) {
+  function scrollIntoViewIfNecessary(ev: MouseEvent & { currentTarget: HTMLElement }) {
     if (!isElementInViewport(ev.currentTarget)) scrollTabIntoView(ev.currentTarget, false);
   }
 </script>
@@ -95,7 +95,7 @@
   min-w-[395px] max-w-[395px] lg:min-w-[32rem] lg:max-w-[32rem]
   rounded-lg border border-slate-500 bg-slate-50
   h-[calc(100vh_-_32px)]"
-  on:click={handleClick}
+  on:mouseup={scrollIntoViewIfNecessary}
 >
   <button on:click={close}
     ><svg
