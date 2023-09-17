@@ -12,6 +12,7 @@
     $page.url.pathname
       .slice(1)
       .split('/')
+      .filter((str) => str !== '')
       .forEach((item: string) => {
         let ditem = decodeURIComponent(item);
         if (ditem.startsWith('wss://') || ditem.startsWith('ws://')) {
