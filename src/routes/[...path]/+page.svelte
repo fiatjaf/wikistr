@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
 
   import { tabs } from '$lib/state';
-  import { next } from '$lib/utils';
+  import { next, scrollTabIntoView } from '$lib/utils';
 
   onMount(() => {
     if ($tabs.length !== 0) return;
@@ -25,6 +25,7 @@
       });
 
     tabs.set($tabs);
+    scrollTabIntoView($tabs[$tabs.length - 1].id, true);
 
     let prev = $page.params.path.split('/');
     return page.subscribe((v) => {

@@ -1,3 +1,4 @@
+import { tabs } from './state';
 import type { Tab } from './types';
 
 export function formatDate(unixtimestamp: number) {
@@ -31,15 +32,18 @@ export function next(): number {
   return serial++;
 }
 
-export function scrollTabIntoView(el: string | HTMLElement, wait: boolean) {
+export function scrollTabIntoView(el: number | string | HTMLElement, wait: boolean) {
   function scrollTab() {
-    const element = typeof el === 'string' ? document.querySelector(`[id^="wikitab-${el}"]`) : el;
+    const element =
+      el instanceof HTMLElement ? el : document.querySelector(`[id^="wikitab-${el}"]`);
     if (!element) return;
 
     element.scrollIntoView({
       behavior: 'smooth',
       inline: 'start'
     });
+
+    updateTabsOutOfView();
   }
 
   if (wait) {
@@ -51,8 +55,8 @@ export function scrollTabIntoView(el: string | HTMLElement, wait: boolean) {
   }
 }
 
-export function isElementInViewport(el: string | HTMLElement) {
-  const element = typeof el === 'string' ? document.querySelector(`[id^="wikitab-${el}"]`) : el;
+export function isElementInViewport(el: number | string | HTMLElement) {
+  const element = el instanceof HTMLElement ? el : document.querySelector(`[id^="wikitab-${el}"]`);
   if (!element) return;
 
   const rect = element.getBoundingClientRect();
@@ -83,4 +87,13 @@ export function getParentCard(el: HTMLElement): HTMLElement | null {
     curr = curr.parentElement;
   }
   return curr;
+}
+
+export function updateTabsOutOfView() {
+  tabs.update((tabs) => {
+    for (let t = 0; t < tabs.length; t++) {
+      tabs[t].outOfView = !isElementInViewport(tabs[t].id);
+    }
+    return tabs;
+  });
 }

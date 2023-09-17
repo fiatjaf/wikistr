@@ -3,7 +3,7 @@
 
   import '../app.postcss';
   import { tabs } from '$lib/state';
-  import { isElementInViewport, getParentCard } from '$lib/utils';
+  import { isElementInViewport, getParentCard, updateTabsOutOfView } from '$lib/utils';
   import CardElement from '$components/CardElement.svelte';
 
   let dragging = false;
@@ -44,6 +44,7 @@
         ev.stopImmediatePropagation();
       }
       dragging = false;
+      updateTabsOutOfView();
     }
 
     function onMouseMove(ev: MouseEvent) {
