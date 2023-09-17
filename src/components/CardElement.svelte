@@ -96,38 +96,35 @@
   min-w-[395px] max-w-[395px] lg:min-w-[32rem] lg:max-w-[32rem]
   rounded-lg border border-slate-500 bg-slate-50
   h-[calc(100vh_-_32px)]
-  relative"
+  p-4"
   on:dblclick={scrollIntoViewIfNecessary}
 >
-  {#if tab.outOfView}<div class="backdrop-blur-sm bg-white/10 h-full w-full absolute" />{/if}
-  <div class="p-4">
-    <button on:click={close}
-      ><svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="w-6 h-6"
-        ><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg
-      ></button
-    >
-    <article class="font-sans mx-auto p-2 lg:max-w-4xl">
-      {#if tab.type === 'article'}
-        <Article {createChild} {replaceSelf} eventId={tab.data} {tab} />
-      {:else if tab.type === 'new'}
-        <New />
-      {:else if tab.type === 'find'}
-        <Search {createChild} {replaceSelf} query={tab.data} {tab} />
-      {:else if tab.type === 'welcome'}
-        <Welcome {createChild} />
-      {:else if tab.type === 'relay'}
-        <Relay {createChild} {replaceSelf} {tab} />
-      {:else if tab.type === 'settings'}
-        <Settings />
-      {:else if tab.type === 'editor'}
-        <Editor {replaceSelf} data={tab.data} />
-      {/if}
-    </article>
-  </div>
+  <button on:click={close}
+    ><svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="w-6 h-6"
+      ><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg
+    ></button
+  >
+  <article class="font-sans mx-auto p-2 lg:max-w-4xl">
+    {#if tab.type === 'article'}
+      <Article {createChild} {replaceSelf} eventId={tab.data} {tab} />
+    {:else if tab.type === 'new'}
+      <New />
+    {:else if tab.type === 'find'}
+      <Search {createChild} {replaceSelf} query={tab.data} {tab} />
+    {:else if tab.type === 'welcome'}
+      <Welcome {createChild} />
+    {:else if tab.type === 'relay'}
+      <Relay {createChild} {replaceSelf} {tab} />
+    {:else if tab.type === 'settings'}
+      <Settings />
+    {:else if tab.type === 'editor'}
+      <Editor {replaceSelf} data={tab.data} />
+    {/if}
+  </article>
 </div>

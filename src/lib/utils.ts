@@ -1,4 +1,3 @@
-import { tabs } from './state';
 import type { Tab } from './types';
 
 export function formatDate(unixtimestamp: number) {
@@ -42,8 +41,6 @@ export function scrollTabIntoView(el: number | string | HTMLElement, wait: boole
       behavior: 'smooth',
       inline: 'start'
     });
-
-    updateTabsOutOfView();
   }
 
   if (wait) {
@@ -87,13 +84,4 @@ export function getParentCard(el: HTMLElement): HTMLElement | null {
     curr = curr.parentElement;
   }
   return curr;
-}
-
-export function updateTabsOutOfView() {
-  tabs.update((tabs) => {
-    for (let t = 0; t < tabs.length; t++) {
-      tabs[t].outOfView = !isElementInViewport(tabs[t].id);
-    }
-    return tabs;
-  });
 }
