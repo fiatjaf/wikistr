@@ -9,9 +9,9 @@ const config = {
     adapter: adapter(),
     alias: {
       $lib: 'src/lib',
-      $components: 'src/lib/components',
-      $cards: 'src/lib/cards'
-    },
+      $components: 'src/components',
+      $cards: 'src/cards'
+    }
   }
 };
 

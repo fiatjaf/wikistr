@@ -4,7 +4,7 @@
   import '../app.postcss';
   import { tabs } from '$lib/state';
   import { isElementInViewport, getParentCard } from '$lib/utils';
-  import TabElement from '$components/TabElement.svelte';
+  import CardElement from '$components/CardElement.svelte';
 
   let dragging = false;
   let startX: number;
@@ -62,11 +62,11 @@
 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
 <div class="flex overflow-x-scroll pb-2" id="panel" draggable="false">
   {#each $tabs as tab (tab.id)}
-    <TabElement {tab} />
+    <CardElement {tab} />
   {/each}
 
   <!-- this is just empty -->
   <slot />
 
-  <TabElement tab={{ type: 'new', id: -1 }} />
+  <CardElement tab={{ type: 'new', id: -1 }} />
 </div>

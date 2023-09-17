@@ -10,7 +10,7 @@
   import Search from '$cards/Search.svelte';
   import Settings from '$cards/Settings.svelte';
   import Relay from '$cards/Relay.svelte';
-  import New from '$lib/cards/New.svelte';
+  import New from '$cards/New.svelte';
 
   export let tab: Tab;
 
@@ -95,7 +95,8 @@
   mx-2 p-4 mt-2
   min-w-[395px] max-w-[395px] lg:min-w-[32rem] lg:max-w-[32rem]
   rounded-lg border border-slate-500 bg-slate-50
-  h-[calc(100vh_-_32px)]"
+  h-[calc(100vh_-_32px)]
+"
   on:dblclick={scrollIntoViewIfNecessary}
 >
   <button on:click={close}
