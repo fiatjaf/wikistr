@@ -38,45 +38,41 @@
   }
 </script>
 
-<div class="font-sans mx-auto p-6 lg:max-w-4xl lg:pt-6 lg:pb-28">
-  <div class="prose">
-    <h1 class="mb-0 text-xl break-all">{tab.data}</h1>
+<div class="mb-0 text-2xl break-all">{tab.data}</div>
+{#each results as result}
+  <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+  <div
+    on:mouseup|preventDefault={openArticle.bind(null, result)}
+    class="cursor-pointer px-4 py-5 bg-white border border-gray-300 hover:bg-slate-50 rounded-lg mt-2 min-h-[48px]"
+  >
+    <h1>
+      {result.tags.find(([t]) => t == 'title')?.[1] || result.tags.find(([t]) => t == 'd')?.[1]}
+    </h1>
+    <div class="text-xs flex justify-between">
+      <span>
+        by <UserLabel pubkey={result.pubkey} />
+      </span>
+    </div>
+    <p class="text-xs">
+      {#if result.tags.find((e) => e[0] == 'summary')?.[0] && result.tags.find((e) => e[0] == 'summary')?.[1]}
+        {result.tags
+          .find((e) => e[0] == 'summary')?.[1]
+          .slice(
+            0,
+            192
+          )}{#if String(result.tags.find((e) => e[0] == 'summary')?.[1])?.length > 192}...{/if}
+      {:else}
+        {result.content.length <= 192
+          ? parsePlainText(result.content.slice(0, 189))
+          : parsePlainText(result.content.slice(0, 189)) + '...'}
+      {/if}
+    </p>
   </div>
-  {#each results as result}
-    <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-    <div
-      on:mouseup|preventDefault={openArticle.bind(null, result)}
-      class="cursor-pointer px-4 py-5 bg-white border border-gray-300 hover:bg-slate-50 rounded-lg mt-2 min-h-[48px]"
-    >
-      <h1>
-        {result.tags.find(([t]) => t == 'title')?.[1] || result.tags.find(([t]) => t == 'd')?.[1]}
-      </h1>
-      <div class="text-xs flex justify-between">
-        <span>
-          by <UserLabel pubkey={result.pubkey} />
-        </span>
-      </div>
-      <p class="text-xs">
-        {#if result.tags.find((e) => e[0] == 'summary')?.[0] && result.tags.find((e) => e[0] == 'summary')?.[1]}
-          {result.tags
-            .find((e) => e[0] == 'summary')?.[1]
-            .slice(
-              0,
-              192
-            )}{#if String(result.tags.find((e) => e[0] == 'summary')?.[1])?.length > 192}...{/if}
-        {:else}
-          {result.content.length <= 192
-            ? parsePlainText(result.content.slice(0, 189))
-            : parsePlainText(result.content.slice(0, 189)) + '...'}
-        {/if}
-      </p>
-    </div>
-  {/each}
-  {#if tried && results.length === 0}
-    <div class="px-4 py-5 bg-white border border-gray-300 rounded-lg mt-2 min-h-[48px]">
-      <p class="mb-2">No articles found in this relay.</p>
-    </div>
-  {:else if !tried}
-    <div class="px-4 py-5 rounded-lg mt-2 min-h-[48px]">Loading...</div>
-  {/if}
-</div>
+{/each}
+{#if tried && results.length === 0}
+  <div class="px-4 py-5 bg-white border border-gray-300 rounded-lg mt-2 min-h-[48px]">
+    <p class="mb-2">No articles found in this relay.</p>
+  </div>
+{:else if !tried}
+  <div class="px-4 py-5 rounded-lg mt-2 min-h-[48px]">Loading...</div>
+{/if}

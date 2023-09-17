@@ -108,17 +108,19 @@
       ><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg
     ></button
   >
-  {#if tab.type === 'article'}
-    <Article {createChild} {replaceSelf} eventId={tab.data} {tab} />
-  {:else if tab.type === 'find'}
-    <Search {createChild} {replaceSelf} query={tab.data} {tab} />
-  {:else if tab.type === 'welcome'}
-    <Welcome {createChild} />
-  {:else if tab.type === 'relay'}
-    <Relay {createChild} {replaceSelf} {tab} />
-  {:else if tab.type === 'settings'}
-    <Settings />
-  {:else if tab.type === 'editor'}
-    <Editor {replaceSelf} data={tab.data} />
-  {/if}
+  <article class="font-sans mx-auto p-2 lg:max-w-4xl">
+    {#if tab.type === 'article'}
+      <Article {createChild} {replaceSelf} eventId={tab.data} {tab} />
+    {:else if tab.type === 'find'}
+      <Search {createChild} {replaceSelf} query={tab.data} {tab} />
+    {:else if tab.type === 'welcome'}
+      <Welcome {createChild} />
+    {:else if tab.type === 'relay'}
+      <Relay {createChild} {replaceSelf} {tab} />
+    {:else if tab.type === 'settings'}
+      <Settings />
+    {:else if tab.type === 'editor'}
+      <Editor {replaceSelf} data={tab.data} />
+    {/if}
+  </article>
 </div>

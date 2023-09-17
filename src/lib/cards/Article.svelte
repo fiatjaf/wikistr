@@ -171,86 +171,84 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-missing-attribute -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <article class="prose font-sans mx-auto p-6 lg:max-w-4xl lg:pt-6 lg:pb-28">
-    {#if event === null}
-      Loading article {eventId}
-    {:else}
-      <div class="flex items-center">
-        <div
-          class="flex flex-col items-center space-y-2 mr-3"
-          class:hidden={$account?.pubkey === event.pubkey}
+  {#if event === null}
+    Loading article {eventId}
+  {:else}
+    <div class="flex items-center">
+      <div
+        class="flex flex-col items-center space-y-2 mr-3"
+        class:hidden={$account?.pubkey === event.pubkey}
+      >
+        <a
+          title={canLike ? '' : liked ? 'you considered this a good article' : ''}
+          class:cursor-pointer={canLike}
+          on:click={() => vote('+')}
         >
-          <a
-            title={canLike ? '' : liked ? 'you considered this a good article' : ''}
-            class:cursor-pointer={canLike}
-            on:click={() => vote('+')}
+          <svg
+            class:fill-stone-600={canLike}
+            class:fill-cyan-500={liked}
+            class:hidden={disliked}
+            width="18"
+            height="18"
+            viewBox="0 0 18 18"><path d="M1 12h16L9 4l-8 8Z"></path></svg
           >
-            <svg
-              class:fill-stone-600={canLike}
-              class:fill-cyan-500={liked}
-              class:hidden={disliked}
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"><path d="M1 12h16L9 4l-8 8Z"></path></svg
-            >
-          </a>
-          <a
-            title={canLike
-              ? 'this is a bad article'
-              : disliked
-              ? 'you considered this a bad article'
-              : ''}
-            class:cursor-pointer={canLike}
-            on:click={() => vote('-')}
+        </a>
+        <a
+          title={canLike
+            ? 'this is a bad article'
+            : disliked
+            ? 'you considered this a bad article'
+            : ''}
+          class:cursor-pointer={canLike}
+          on:click={() => vote('-')}
+        >
+          <svg
+            class:fill-stone-600={canLike}
+            class:fill-rose-400={disliked}
+            class:hidden={liked}
+            width="18"
+            height="18"
+            viewBox="0 0 18 18"><path d="M1 6h16l-8 8-8-8Z"></path></svg
           >
-            <svg
-              class:fill-stone-600={canLike}
-              class:fill-rose-400={disliked}
-              class:hidden={liked}
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"><path d="M1 6h16l-8 8-8-8Z"></path></svg
-            >
-          </a>
+        </a>
+      </div>
+      <div class="ml-2 mb-4">
+        <span class="mt-2 font-bold text-4xl"> {title || dTag} </span>
+        <div>
+          by <UserLabel pubkey={event.pubkey} />
+          {#if event.created_at}
+            on {formatDate(event.created_at)}
+          {/if}
+          <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
         </div>
-        <div class="ml-2">
-          <h1 class="mb-0">
-            {title || dTag}
-          </h1>
-          <div>
-            by <UserLabel pubkey={event.pubkey} />
-            {#if event.created_at}
-              on {formatDate(event.created_at)}
-            {/if}
-            <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
-          </div>
-          <div>
-            <a class="cursor-pointer" on:click={edit}>Fork</a>
-            &nbsp;• &nbsp;
-            <a class="cursor-pointer" on:click={shareCopy}>
-              {#if copied}Copied!{:else}Share{/if}
-            </a>
-            &nbsp;• &nbsp;
-            <a class="cursor-pointer" on:mouseup|preventDefault={seeOthers}>Versions</a>
-          </div>
+        <div>
+          <a class="cursor-pointer underline" on:click={edit}>Fork</a>
+          &nbsp;• &nbsp;
+          <a class="cursor-pointer underline" on:click={shareCopy}>
+            {#if copied}Copied!{:else}Share{/if}
+          </a>
+          &nbsp;• &nbsp;
+          <a class="cursor-pointer underline" on:mouseup|preventDefault={seeOthers}>Versions</a>
         </div>
       </div>
+    </div>
 
-      <!-- Content -->
+    <!-- Content -->
+    <div class="prose">
       {@html parse(event?.content)}
+    </div>
 
-      <div class="mt-4">
-        <h2 class="m-0 p-0">Found on relays</h2>
-        <ul class="list-disc m-0 pt-2 px-5">
-          {#each getRelaysForEvent(event) as r}
-            <li class="p-0 m-0 cursor-pointer">
-              <a on:mouseup|preventDefault={openRelay.bind(null, r)}>
-                {new URL(r).host}
-              </a>
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-  </article>
+    <div class="mt-4">
+      <span class="font-bold text-lg">Found on relays</span>
+      <ul class="list-disc m-0 pt-2 px-5">
+        {#each getRelaysForEvent(event) as r}
+          <li class="p-0 m-0 cursor-pointer underline">
+            <a on:mouseup|preventDefault={openRelay.bind(null, r)}>
+              {new URL(r).host}
+            </a>
+          </li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
 </div>
