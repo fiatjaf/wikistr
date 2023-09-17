@@ -73,7 +73,7 @@
 
   <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
   <div
-    id={`wikitab-v0-special-search`}
+    id={`wikitab-special-search`}
     class="
 overflow-y-auto
 overflow-x-hidden

@@ -3,6 +3,6 @@
 </script>
 
 <button
-  id={`wikilink-v0-${content.toLocaleLowerCase().replaceAll(' ', '-')}`}
+  id={`wikilink-${content.toLocaleLowerCase().replaceAll(' ', '-')}`}
   class="text-indigo-600 underline">{content}</button
 >

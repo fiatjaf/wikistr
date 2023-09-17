@@ -87,7 +87,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
 <div
-  id={`wikitab-v0-${tab.id}`}
+  id={`wikitab-${tab.id}`}
   class="
   overflow-y-auto
   overflow-x-hidden

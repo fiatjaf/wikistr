@@ -34,7 +34,7 @@
   $: summary = event?.tags.find(([k]) => k === 'summary')?.[1];
 
   function addClickListenerToWikilinks() {
-    const elements = document.querySelectorAll('[id^="wikilink-v0-"]');
+    const elements = document.querySelectorAll('[id^="wikilink-"]');
     elements.forEach((element) => {
       element.addEventListener('click', () => {
         let title = element.id.slice(12);
