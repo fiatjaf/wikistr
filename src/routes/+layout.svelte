@@ -2,11 +2,12 @@
   import { onMount } from 'svelte';
 
   import '../app.postcss';
-  import { tabs, mainPanelDragging } from '$lib/state';
+  import { tabs } from '$lib/state';
   import { isElementInViewport, scrollTabIntoView, getParentCard } from '$lib/utils';
   import TabElement from '$components/TabElement.svelte';
   import Searchbar from '$components/Searchbar.svelte';
 
+  let dragging = false;
   let startX: number;
   let scrollLeft: number;
 
@@ -32,24 +33,23 @@
       }
 
       ev.preventDefault();
-      mainPanelDragging.set(true);
+      dragging = true;
       startX = ev.clientX - slider.offsetLeft;
       scrollLeft = slider.scrollLeft;
     }
 
     function onMouseUp(ev: MouseEvent) {
-      console.log('mouseup:dragging', $mainPanelDragging);
-      if ($mainPanelDragging) {
+      if (dragging) {
         ev.preventDefault();
         ev.stopPropagation();
         ev.stopImmediatePropagation();
       }
-      mainPanelDragging.set(false);
+      dragging = false;
     }
 
     function onMouseMove(ev: MouseEvent) {
       if (!slider) return;
-      if (!$mainPanelDragging) return;
+      if (!dragging) return;
       ev.preventDefault();
       slider.scrollLeft = scrollLeft + startX - ev.clientX;
     }
@@ -79,7 +79,7 @@ mx-2 p-4 mt-2
 min-w-[395px] max-w-[395px] lg:min-w-[32rem] lg:max-w-[32rem]
 rounded-lg border border-slate-500 bg-slate-50
 h-[calc(100vh_-_32px)]"
-    on:click={(ev) => scrollTabIntoView(ev.currentTarget, false)}
+    on:dblclick={(ev) => scrollTabIntoView(ev.currentTarget, false)}
   >
     <div class="p-6"><Searchbar /></div>
   </div>

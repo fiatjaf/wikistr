@@ -1,4 +1,3 @@
-import { mainPanelDragging } from './state';
 import type { Tab } from './types';
 
 export function formatDate(unixtimestamp: number) {
@@ -32,14 +31,7 @@ export function next(): number {
   return serial++;
 }
 
-let dontScroll = false;
-mainPanelDragging.subscribe((v) => {
-  dontScroll = v;
-});
-
 export function scrollTabIntoView(el: string | HTMLElement, wait: boolean) {
-  if (dontScroll) return;
-
   function scrollTab() {
     const element = typeof el === 'string' ? document.querySelector(`[id^="wikitab-${el}"]`) : el;
     if (!element) return;

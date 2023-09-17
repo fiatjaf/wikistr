@@ -213,7 +213,7 @@
         </a>
       </div>
       <div class="ml-2 mb-4">
-        <span class="mt-2 font-bold text-4xl"> {title || dTag} </span>
+        <div class="mt-2 font-bold text-4xl">{title || dTag}</div>
         <div>
           by <UserLabel pubkey={event.pubkey} />
           {#if event.created_at}
@@ -239,11 +239,11 @@
     </div>
 
     <div class="mt-4">
-      <span class="font-bold text-lg">Found on relays</span>
+      <div class="font-bold text-lg">Found on relays</div>
       <ul class="list-disc m-0 pt-2 px-5">
         {#each getRelaysForEvent(event) as r}
-          <li class="p-0 m-0 cursor-pointer underline">
-            <a on:mouseup|preventDefault={openRelay.bind(null, r)}>
+          <li class="p-0 m-0">
+            <a class="cursor-pointer underline" on:mouseup|preventDefault={openRelay.bind(null, r)}>
               {new URL(r).host}
             </a>
           </li>
