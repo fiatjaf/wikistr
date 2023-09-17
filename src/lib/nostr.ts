@@ -157,6 +157,27 @@ export function cachingSub(
   hook: HookFunc,
   keyfn: KeyFunc = (event: Event) => event.id
 ): CancelFunc {
+  const alreadyHaveEvent =
+    filter.kinds?.[0] === wikiKind || filter.ids
+      ? (id: string, relay: string) => {
+          const event = cachedArticles.get(id);
+          if (event) {
+            // we already have this event, so no need to parse it again
+            cacheSeenOn(event, relay);
+
+            // if we didn't have this in the cache yet we add it then trigger the hook
+            const k = keyfn(event);
+            if (!cache.has(k)) {
+              cache.set(k, event);
+              invokeHook();
+            }
+
+            return true;
+          }
+          return false;
+        }
+      : undefined;
+
   const invokeHook = debounce(() => {
     const s = _subscriptions[name];
     if (!s) return;
@@ -185,23 +206,7 @@ export function cachingSub(
     const r = await ensureRelay(url);
     const subscription = r.sub([filter], {
       id: name,
-      alreadyHaveEvent: (id, relay) => {
-        const event = cachedArticles.get(id);
-        if (event) {
-          // we already have this event, so no need to parse it again
-          cacheSeenOn(event, relay);
-
-          // if we didn't have this in the cache yet we add it then trigger the hook
-          const k = keyfn(event);
-          if (!cache.has(k)) {
-            cache.set(k, event);
-            invokeHook();
-          }
-
-          return true;
-        }
-        return false;
-      },
+      alreadyHaveEvent,
       skipVerification: true
     });
     subs.push(subscription);
