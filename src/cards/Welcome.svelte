@@ -1,32 +1,43 @@
 <script lang="ts">
   import { parsePlainText } from '$lib/articleParser';
   import { onMount } from 'svelte';
-  import * as nip19 from 'nostr-tools/nip19';
   import type { Event } from 'nostr-tools/pure';
 
-  import { cachingSub, signer, userPreferredRelays, getA, wikiKind, account } from '$lib/nostr';
+  import { signer, userPreferredRelays, wikiKind, account, _pool, getTagOr } from '$lib/nostr';
   import type { Tab } from '$lib/types';
   import UserLabel from '$components/UserLabel.svelte';
-  import { next } from '$lib/utils';
+  import { getA, next } from '$lib/utils';
+  import { debounce } from 'debounce';
 
   let results: Event[] = [];
   export let createChild: (tab: Tab) => void;
 
   onMount(() => {
-    return cachingSub(
-      'recent',
+    const update = debounce(() => {
+      results = results;
+    }, 500);
+
+    let sub = _pool.subscribeMany(
       $userPreferredRelays.read,
-      { kinds: [wikiKind], limit: 12 },
-      handleUpdate,
-      getA
+      [
+        {
+          kinds: [wikiKind],
+          limit: 12
+        }
+      ],
+      {
+        onevent(evt) {
+          results.push(evt);
+          update();
+        }
+      }
     );
-    function handleUpdate(events: Event[]) {
-      results = events;
-    }
+
+    return sub.close;
   });
 
   function openArticle(result: Event) {
-    createChild({ id: next(), type: 'article', data: result.id });
+    createChild({ id: next(), type: 'article', data: [getTagOr(result, 'd'), result.pubkey] });
   }
 
   function doLogin() {
@@ -38,12 +49,12 @@
 <div class="mb-4 mt-2">
   {#if $account}
     <div class="flex h-12">
-      {#if $account.picture}
-        <img class="full-h" src={$account.picture} alt="user avatar" />
+      {#if $account.image}
+        <img class="full-h" src={$account.image} alt="user avatar" />
       {/if}
       <div class="ml-2">
-        <p class="w-64 text-ellipsis overflow-hidden">{nip19.npubEncode($account.pubkey)}</p>
-        <p>{$account.name}</p>
+        <p class="w-64 text-ellipsis overflow-hidden">{$account.npub}</p>
+        <p>{$account.shortName}</p>
       </div>
     </div>
   {:else}

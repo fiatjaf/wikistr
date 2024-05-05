@@ -1,12 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Event } from 'nostr-tools';
+  import type { Event, SubCloser } from 'nostr-tools';
 
-  import { cachingSub, getA, userPreferredRelays, wikiKind } from '$lib/nostr';
+  import { _pool, account, getTagOr, userPreferredRelays, wikiKind } from '$lib/nostr';
   import type { ArticleTab, Tab } from '$lib/types';
   import { parsePlainText } from '$lib/articleParser';
   import UserLabel from '$components/UserLabel.svelte';
   import { next, normalizeArticleName } from '$lib/utils';
+  import { DEFAULT_SEARCH_RELAYS } from '$lib/defaults';
+  import { loadWikiRelaysList } from '$lib/lists';
+  import { debounce } from 'debounce';
 
   export let query: string;
   export let tab: Tab;
@@ -19,19 +22,50 @@
     setTimeout(() => {
       tried = true;
     }, 1500);
-    return cachingSub(
-      `directsearch-${query}`,
-      $userPreferredRelays.read,
-      { kinds: [wikiKind], '#d': [normalizeArticleName(query)], limit: 25 },
-      (events) => {
-        results = events;
-      },
-      getA
-    );
+
+    const update = debounce(() => {
+      results = results;
+    }, 500);
+
+    let search: SubCloser, sub: SubCloser;
+    (async () => {
+      let wikiRelays = $account ? await loadWikiRelaysList($account?.pubkey) : [];
+
+      sub = _pool.subscribeMany(
+        [...wikiRelays, ...$userPreferredRelays.read],
+        [{ kinds: [wikiKind], '#d': [normalizeArticleName(query)], limit: 25 }],
+        {
+          oneose() {
+            tried = true;
+          },
+          onevent(evt) {
+            tried = true;
+            results.push(evt);
+            update();
+          }
+        }
+      );
+
+      search = _pool.subscribeMany(DEFAULT_SEARCH_RELAYS, [{ kinds: [wikiKind], search: query }], {
+        onevent(evt) {
+          results.push(evt);
+          update();
+        }
+      });
+    })();
+
+    return () => {
+      if (sub) sub.close();
+      if (search) search.close();
+    };
   });
 
   function openArticle(result: Event, ev: MouseEvent) {
-    let articleTab: ArticleTab = { id: next(), type: 'article', data: result.id };
+    let articleTab: ArticleTab = {
+      id: next(),
+      type: 'article',
+      data: [getTagOr(result, 'd'), result.pubkey]
+    };
     if (ev.button === 1) createChild(articleTab);
     else replaceSelf(articleTab);
   }

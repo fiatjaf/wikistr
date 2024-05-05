@@ -6,7 +6,8 @@
   import { parsePlainText } from '$lib/articleParser';
   import UserLabel from '$components/UserLabel.svelte';
   import { next } from '$lib/utils';
-  import { cachingSub, getA, wikiKind } from '$lib/nostr';
+  import { _pool, getTagOr, wikiKind } from '$lib/nostr';
+  import { debounce } from 'debounce';
 
   export let tab: Tab;
   export let replaceSelf: (tab: Tab) => void;
@@ -15,24 +16,43 @@
   let tried = false;
 
   onMount(() => {
+    const update = debounce(() => {
+      results = results;
+    }, 500);
+
     setTimeout(() => {
       tried = true;
     }, 1500);
 
-    return cachingSub(
-      `relay-${tab.data}`,
+    let sub = _pool.subscribeMany(
       [tab.data],
-      { kinds: [wikiKind], limit: 25 },
-      (events) => {
-        tried = true;
-        results = events;
-      },
-      getA
+      [
+        {
+          kinds: [wikiKind],
+          limit: 25
+        }
+      ],
+      {
+        oneose() {
+          tried = true;
+        },
+        onevent(evt) {
+          tried = true;
+          results.push(evt);
+          update();
+        }
+      }
     );
+
+    return sub.close;
   });
 
   function openArticle(result: Event, ev: MouseEvent) {
-    let articleTab: ArticleTab = { id: next(), type: 'article', data: result.id };
+    let articleTab: ArticleTab = {
+      id: next(),
+      type: 'article',
+      data: [getTagOr(result, 'd'), result.pubkey]
+    };
     if (ev.button === 1) createChild(articleTab);
     else replaceSelf(articleTab);
   }

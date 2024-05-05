@@ -4,23 +4,21 @@
 
   import {
     account,
-    cachingSub,
-    cachedArticles,
     userPreferredRelays,
     getRelaysForEvent,
     reactionKind,
     broadcast,
-    getA,
-    safeRelays,
-    fallbackRelays
+    _pool
   } from '$lib/nostr';
-  import { formatDate, next } from '$lib/utils';
+  import { formatDate, getA, next } from '$lib/utils';
   import type { RelayTab, SearchTab, Tab } from '$lib/types';
   import { page } from '$app/stores';
   import UserLabel from '$components/UserLabel.svelte';
   import ArticleContent from '$components/ArticleContent.svelte';
+  import { loadRelayList } from '$lib/lists';
+  import { loadNostrUser, bareNostrUser, type NostrUser } from '$lib/metadata';
 
-  export let eventId: string;
+  export let article: [string, string];
   export let tab: Tab;
   export let createChild: (tab: Tab) => void;
   export let replaceSelf: (tab: Tab) => void;
@@ -29,10 +27,13 @@
   let liked = false;
   let disliked = false;
   let canLike: boolean | undefined;
+  const dTag = article[0];
+  const pubkey = article[1];
+  let author: NostrUser = bareNostrUser(pubkey);
 
-  $: dTag = event?.tags.find(([k]) => k === 'd')?.[1] || '';
-  $: title = event?.tags.find(([k]) => k === 'title')?.[1] || '';
+  $: title = event?.tags.find(([k]) => k === 'title')?.[1] || dTag;
   $: summary = event?.tags.find(([k]) => k === 'summary')?.[1];
+  $: relaysForEvent = event ? getRelaysForEvent(event) : [];
 
   function edit() {
     replaceSelf({
@@ -48,7 +49,7 @@
   }
 
   function shareCopy() {
-    navigator.clipboard.writeText(`https://${$page.url.hostname}/${title}/${eventId}`);
+    navigator.clipboard.writeText(`https://${$page.url.hostname}/${dTag}*${pubkey}`);
     copied = true;
     setTimeout(() => {
       copied = false;
@@ -71,22 +72,31 @@
   }
 
   onMount(() => {
-    let cached = cachedArticles.get(eventId);
-    if (cached) {
-      event = cached;
-      onArticle();
-      return;
-    }
+    (async () => {
+      let relays = await loadRelayList(pubkey);
 
-    return cachingSub(
-      `article-${eventId.slice(-8)}`,
-      [...$userPreferredRelays.write, ...fallbackRelays],
-      { ids: [eventId] },
-      (result) => {
-        event = result[0];
-        onArticle();
-      }
-    );
+      _pool.subscribeMany(
+        relays.filter((ri) => ri.write).map((ri) => ri.url),
+        [
+          {
+            authors: [pubkey],
+            '#d': [dTag]
+          }
+        ],
+        {
+          onevent(evt) {
+            if (!event || event.created_at < evt.created_at) {
+              event = evt;
+              onArticle();
+            }
+          }
+        }
+      );
+    })();
+
+    (async () => {
+      author = await loadNostrUser(pubkey);
+    })();
   });
 
   onMount(() => {
@@ -114,25 +124,25 @@
       }
     }, 2500);
 
-    cancelers.push(
-      cachingSub(
-        `reaction-${eventId.slice(-8)}`,
-        [...$userPreferredRelays.read, ...safeRelays],
-        { authors: [$account.pubkey], ['#a']: [getA(event)] },
-        (result) => {
-          canLike = false;
+    //cancelers.push(
+    //  cachingSub(
+    //    `reaction-${eventId.slice(-8)}`,
+    //    [...$userPreferredRelays.read, ...safeRelays],
+    //    { authors: [$account.pubkey], ['#a']: [getA(event)] },
+    //    (result) => {
+    //      canLike = false;
 
-          switch (result[0]?.content) {
-            case '+':
-              liked = true;
-              break;
-            case '-':
-              disliked = true;
-              break;
-          }
-        }
-      )
-    );
+    //      switch (result[0]?.content) {
+    //        case '+':
+    //          liked = true;
+    //          break;
+    //        case '-':
+    //          disliked = true;
+    //          break;
+    //      }
+    //    }
+    //  )
+    //);
   }
 
   function vote(v: '+' | '-') {
@@ -150,7 +160,7 @@
       created_at: Math.round(Date.now() / 1000)
     };
 
-    broadcast(eventTemplate, [...$userPreferredRelays.write, ...safeRelays]);
+    broadcast(eventTemplate, $userPreferredRelays.write);
   }
 </script>
 
@@ -159,7 +169,7 @@
   <!-- svelte-ignore a11y-missing-attribute -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   {#if event === null}
-    Loading article {eventId}
+    Loading article {dTag} from {author.shortName}
   {:else}
     <div class="flex items-center">
       <div
@@ -184,8 +194,8 @@
           title={canLike
             ? 'this is a bad article'
             : disliked
-            ? 'you considered this a bad article'
-            : ''}
+              ? 'you considered this a bad article'
+              : ''}
           class:cursor-pointer={canLike}
           on:click={() => vote('-')}
         >
@@ -225,17 +235,22 @@
       <ArticleContent {event} {createChild} />
     </div>
 
-    <div class="mt-4">
-      <div class="font-bold text-lg">Found on relays</div>
-      <ul class="list-disc m-0 pt-2 px-5">
-        {#each getRelaysForEvent(event) as r}
-          <li class="p-0 m-0">
-            <a class="cursor-pointer underline" on:mouseup|preventDefault={openRelay.bind(null, r)}>
-              {new URL(r).host}
-            </a>
-          </li>
-        {/each}
-      </ul>
-    </div>
+    {#if relaysForEvent.length}
+      <div class="mt-4">
+        <div class="font-bold text-lg">Found on relays</div>
+        <ul class="list-disc m-0 pt-2 px-5">
+          {#each relaysForEvent as r}
+            <li class="p-0 m-0">
+              <a
+                class="cursor-pointer underline"
+                on:mouseup|preventDefault={openRelay.bind(null, r)}
+              >
+                {new URL(r).host}
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
   {/if}
 </div>

@@ -112,7 +112,7 @@
   >
   <article class="font-sans mx-auto p-2 lg:max-w-4xl">
     {#if tab.type === 'article'}
-      <Article {createChild} {replaceSelf} eventId={tab.data} {tab} />
+      <Article {createChild} {replaceSelf} article={tab.data} {tab} />
     {:else if tab.type === 'new'}
       <New />
     {:else if tab.type === 'find'}

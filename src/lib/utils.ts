@@ -1,4 +1,7 @@
+import type { NostrEvent } from 'nostr-tools';
 import type { Tab } from './types';
+import LRUCache from 'mnemonist/lru-cache';
+import type { CacheMap } from 'dataloader';
 
 export function formatDate(unixtimestamp: number) {
   const months = [
@@ -71,7 +74,7 @@ export function toURL(tab: Tab): string | null {
     case 'find':
       return tab.data;
     case 'article':
-      return tab.data;
+      return tab.data.join('*');
     case 'relay':
       return encodeURIComponent(tab.data);
   }
@@ -88,4 +91,23 @@ export function getParentCard(el: HTMLElement): HTMLElement | null {
 
 export function normalizeArticleName(input: string): string {
   return input.trim().toLowerCase().replace(/\W/g, '-');
+}
+
+export function getA(event: NostrEvent) {
+  const dTag = event.tags.find(([t, v]) => t === 'd' && v)?.[1] || '';
+  return `${event.kind}:${event.pubkey}:${dTag}`;
+}
+
+export function dataloaderCache<V>(): CacheMap<string, Promise<V>> {
+  const cache = new LRUCache<string, Promise<V>>(2000);
+  return {
+    get(key) {
+      return cache.get(key);
+    },
+    set(key, value) {
+      cache.set(key, value);
+    },
+    delete(_key) {},
+    clear() {}
+  };
 }

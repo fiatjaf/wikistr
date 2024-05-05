@@ -17,8 +17,8 @@
         let ditem = decodeURIComponent(item);
         if (ditem.startsWith('wss://') || ditem.startsWith('ws://')) {
           $tabs.push({ id: next(), type: 'relay', data: ditem });
-        } else if (item.match(/^[a-f0-9]{64}$/)) {
-          $tabs.push({ id: next(), type: 'article', data: item });
+        } else if (item.match(/^[\w-]+\*[a-f0-9]{64}$/)) {
+          $tabs.push({ id: next(), type: 'article', data: item.split('*') });
         } else {
           $tabs.push({ id: next(), type: 'find', data: item });
         }

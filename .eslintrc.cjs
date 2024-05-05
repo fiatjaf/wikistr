@@ -35,6 +35,7 @@ module.exports = {
         destructuredArrayIgnorePattern: '^_'
       }
     ],
-    '@typescript-eslint/no-explicit-any': 'off'
+    '@typescript-eslint/no-explicit-any': 'off',
+    'no-async-promise-executor': 'off'
   }
 };

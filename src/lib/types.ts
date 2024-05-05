@@ -25,7 +25,7 @@ export type ArticleTab = {
   id: number;
   type: TabType;
   parent?: number;
-  data: string; // event id
+  data: [string, string]; // d-tag * pubkey
 };
 
 export type RelayTab = {
