@@ -41,6 +41,6 @@
     "markdown-it": "^13.0.1",
     "markdown-it-plain-text": "^0.3.0",
     "marked": "^7.0.5",
-    "nostr-tools": "^1.15.0"
+    "nostr-tools": "^2.5.2"
   }
 }

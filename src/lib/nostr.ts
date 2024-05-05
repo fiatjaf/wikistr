@@ -1,19 +1,15 @@
 import { debounce } from 'debounce';
-import {
-  relayInit,
-  utils,
-  type EventTemplate,
-  type Sub,
-  type Relay,
-  type Event,
-  type Filter
-} from 'nostr-tools';
 import { readable } from 'svelte/store';
+import type { EventTemplate, Event } from 'nostr-tools/pure';
+import type { Filter } from 'nostr-tools/filter';
+import { SimplePool } from 'nostr-tools/pool';
+import { normalizeURL } from 'nostr-tools/utils';
+import type { Relay, Subscription } from 'nostr-tools/relay';
 
 type CancelFunc = () => void;
 type HookFunc = (events: Event[]) => void;
 type KeyFunc = (event: Event) => string;
-type Subscription = {
+type CachingSubscription = {
   cache: Map<string, Event>;
   hook: HookFunc;
   cancel: CancelFunc;
@@ -31,8 +27,8 @@ export const reactionKind = 7;
 export const labelKind = 1985;
 export const wikiKind = 30818;
 
-const _conn: Record<string, Relay> = {};
-const _subscriptions: Record<string, Subscription> = {};
+const _pool = new SimplePool();
+const _subscriptions: Record<string, CachingSubscription> = {};
 const _metadataCache = new Map<string, Metadata>();
 const _seenOn = new WeakMap<Event, Set<string>>();
 
@@ -77,7 +73,7 @@ export const fallback = [
   'wss://relay.nostr.band'
 ];
 
-export const relayLists = ['wss://purplepag.es'];
+export const relayLists = ['wss://purplepag.es', 'wss://relay.nos.social'];
 
 export const profiles = ['wss://relay.damus.io', 'wss://relay.primal.net', 'wss://purplepag.es'];
 
@@ -85,7 +81,7 @@ export const safeRelays = [
   'wss://nostr.mom',
   'wss://nostr.wine',
   'wss://relay.snort.social',
-  'wss://atlas.nostr.land'
+  'wss://nostr.land'
 ];
 
 export const userPreferredRelays = readable(safeRelays, (set) => {
@@ -97,21 +93,6 @@ export const getA: KeyFunc = (event: Event) => {
   const dTag = event.tags.find(([t, v]) => t === 'd' && v)?.[1] || '';
   return `${event.kind}:${event.pubkey}:${dTag}`;
 };
-
-async function ensureRelay(url: string): Promise<Relay> {
-  const nm = utils.normalizeURL(url);
-
-  if (!_conn[nm]) {
-    _conn[nm] = relayInit(nm, {
-      getTimeout: 3000,
-      listTimeout: 5000
-    });
-  }
-
-  const relay = _conn[nm];
-  await relay.connect();
-  return relay;
-}
 
 export function getRelaysForEvent(event: Event): Iterable<string> {
   return _seenOn.get(event)?.keys() || [];
@@ -136,7 +117,7 @@ export async function broadcast(
   await Promise.all(
     relays.map(async (url) => {
       try {
-        const r = await ensureRelay(url);
+        const r = await _pool.ensureRelay(url);
         await r.publish(event);
         successes.push(url);
       } catch (err) {
@@ -159,11 +140,11 @@ export function cachingSub(
 ): CancelFunc {
   const alreadyHaveEvent =
     filter.kinds?.[0] === wikiKind || filter.ids
-      ? (id: string, relay: string) => {
+      ? (relay: Relay, id: string) => {
           const event = cachedArticles.get(id);
           if (event) {
             // we already have this event, so no need to parse it again
-            cacheSeenOn(event, relay);
+            cacheSeenOn(event, relay.url);
 
             // if we didn't have this in the cache yet we add it then trigger the hook
             const k = keyfn(event);
@@ -191,10 +172,10 @@ export function cachingSub(
     return _subscriptions[name].cancel;
   }
 
-  const subs: Sub[] = [];
+  const subs: Subscription[] = [];
   const cancel = () => {
     subs.forEach((s) => {
-      s.unsub();
+      s.close();
     });
     delete _subscriptions[name];
   };
@@ -203,25 +184,24 @@ export function cachingSub(
   _subscriptions[name] = { cache, hook, cancel };
 
   relays.forEach(async (url) => {
-    const r = await ensureRelay(url);
-    const subscription = r.sub([filter], {
+    const r = await _pool.ensureRelay(url);
+    const subscription = r.prepareSubscription([filter], {
       id: name,
-      alreadyHaveEvent,
-      skipVerification: true
-    });
-    subs.push(subscription);
-
-    subscription.on('event', (event) => {
-      _subscriptions[name]?.cache?.set?.(keyfn(event), event);
-      if (event.kind === wikiKind) {
-        if (!cachedArticles.has(event.id)) {
-          // only set if not already set otherwise we lose the seenOn stuff
-          cachedArticles.set(event.id, event);
+      receivedEvent: alreadyHaveEvent,
+      onevent(event) {
+        _subscriptions[name]?.cache?.set?.(keyfn(event), event);
+        if (event.kind === wikiKind) {
+          if (!cachedArticles.has(event.id)) {
+            // only set if not already set otherwise we lose the seenOn stuff
+            cachedArticles.set(event.id, event);
+          }
+          cacheSeenOn(event, url);
         }
-        cacheSeenOn(event, url);
+        invokeHook();
       }
-      invokeHook();
     });
+    subscription.fire();
+    subs.push(subscription);
   });
 
   return cancel;
@@ -230,37 +210,24 @@ export function cachingSub(
 function cacheSeenOn(event: Event, relay: string) {
   const relays = _seenOn.get(event) || new Set();
   _seenOn.set(event, relays);
-  relays.add(utils.normalizeURL(relay));
+  relays.add(normalizeURL(relay));
 }
 
 export async function getMetadata(pubkey: string): Promise<Metadata> {
-  let metadata = _metadataCache.get(pubkey);
+  const metadata = _metadataCache.get(pubkey);
   if (metadata) return metadata;
 
   // TODO: use dexie as a second-level cache
-
-  metadata = await new Promise<Metadata>((resolve) => {
-    let ongoing = profiles.length;
-    profiles.forEach(async (url) => {
-      const r = await ensureRelay(url);
-      const event = await r.get({ kinds: [0], authors: [pubkey] });
-      if (event) {
-        try {
-          const metadata = JSON.parse(event.content);
-          metadata.pubkey = pubkey;
-          resolve(metadata);
-        } catch (err) {
-          ongoing--;
-          if (ongoing === 0) {
-            resolve({ pubkey, nip05valid: false });
-          }
-        }
-      }
-    });
-  });
-
+  const event = await _pool.get(profiles, { kinds: [0], authors: [pubkey] });
+  try {
+    const metadata = JSON.parse(event!.content);
+    metadata.pubkey = pubkey;
+    _metadataCache.set(pubkey, metadata);
+    return metadata;
+  } catch (err) {
+    const metadata = { pubkey, nip05valid: false };
+    _metadataCache.set(pubkey, metadata);
+    return metadata;
+  }
   // TODO: validate nip05
-
-  _metadataCache.set(pubkey, metadata);
-  return metadata;
 }
