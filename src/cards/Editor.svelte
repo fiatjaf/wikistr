@@ -10,12 +10,15 @@
   let message: string | undefined;
 
   async function publish() {
+    data.title = data.title.trim();
+
     let eventTemplate: EventTemplate = {
       kind: wikiKind,
       tags: [['d', data.title.toLowerCase().replaceAll(' ', '-')]],
       content: data.content,
       created_at: Math.round(Date.now() / 1000)
     };
+    if (data.title !== eventTemplate.tags[0][1]) eventTemplate.tags.push(['title', data.title]);
     if (data.summary) eventTemplate.tags.push(['summary', data.summary]);
 
     let { event, successes, failures, error } = await broadcast(
@@ -88,7 +91,7 @@
     <button
       on:click={publish}
       class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-      >Submit</button
+      >Save</button
     >
   </div>
 {/if}
