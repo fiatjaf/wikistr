@@ -34,6 +34,7 @@ module.exports = {
         argsIgnorePattern: '^_',
         destructuredArrayIgnorePattern: '^_'
       }
-    ]
+    ],
+    '@typescript-eslint/no-explicit-any': 'off'
   }
 };

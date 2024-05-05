@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { afterUpdate, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import type { Event, EventTemplate } from 'nostr-tools';
 
   import {
@@ -15,10 +15,10 @@
     fallbackRelays
   } from '$lib/nostr';
   import { formatDate, next } from '$lib/utils';
-  import { parse } from '$lib/articleParser.js';
   import type { RelayTab, SearchTab, Tab } from '$lib/types';
   import { page } from '$app/stores';
   import UserLabel from '$components/UserLabel.svelte';
+  import ArticleContent from '$components/ArticleContent.svelte';
 
   export let eventId: string;
   export let tab: Tab;
@@ -33,16 +33,6 @@
   $: dTag = event?.tags.find(([k]) => k === 'd')?.[1] || '';
   $: title = event?.tags.find(([k]) => k === 'title')?.[1] || '';
   $: summary = event?.tags.find(([k]) => k === 'summary')?.[1];
-
-  function addClickListenerToWikilinks() {
-    const elements = document.querySelectorAll('[id^="wikilink-"]');
-    elements.forEach((element) => {
-      element.addEventListener('click', () => {
-        let title = element.id.slice(12);
-        createChild({ id: next(), type: 'find', data: title });
-      });
-    });
-  }
 
   function edit() {
     replaceSelf({
@@ -145,10 +135,6 @@
     );
   }
 
-  afterUpdate(() => {
-    addClickListenerToWikilinks();
-  });
-
   function vote(v: '+' | '-') {
     if (!event) return;
     if (!canLike) return;
@@ -236,7 +222,7 @@
 
     <!-- Content -->
     <div class="prose">
-      {@html parse(event?.content)}
+      <ArticleContent {event} {createChild} />
     </div>
 
     <div class="mt-4">

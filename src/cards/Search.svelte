@@ -6,7 +6,7 @@
   import type { ArticleTab, Tab } from '$lib/types';
   import { parsePlainText } from '$lib/articleParser';
   import UserLabel from '$components/UserLabel.svelte';
-  import { next } from '$lib/utils';
+  import { next, normalizeArticleName } from '$lib/utils';
 
   export let query: string;
   export let tab: Tab;
@@ -22,7 +22,7 @@
     return cachingSub(
       `directsearch-${query}`,
       $userPreferredRelays.read,
-      { kinds: [wikiKind], '#d': [query.toLowerCase()], limit: 25 },
+      { kinds: [wikiKind], '#d': [normalizeArticleName(query)], limit: 25 },
       (events) => {
         results = events;
       },

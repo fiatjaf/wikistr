@@ -85,3 +85,7 @@ export function getParentCard(el: HTMLElement): HTMLElement | null {
   }
   return curr;
 }
+
+export function normalizeArticleName(input: string): string {
+  return input.trim().toLowerCase().replace(/\W/g, '-');
+}

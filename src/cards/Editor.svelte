@@ -1,7 +1,7 @@
 <script lang="ts">
   import { wikiKind, broadcast, userPreferredRelays } from '$lib/nostr';
   import type { EditorData, Tab } from '$lib/types.ts';
-  import { next } from '$lib/utils';
+  import { next, normalizeArticleName } from '$lib/utils';
   import type { EventTemplate } from 'nostr-tools';
 
   export let replaceSelf: (tab: Tab) => void;
@@ -14,7 +14,7 @@
 
     let eventTemplate: EventTemplate = {
       kind: wikiKind,
-      tags: [['d', data.title.toLowerCase().replaceAll(' ', '-')]],
+      tags: [['d', normalizeArticleName(data.title)]],
       content: data.content,
       created_at: Math.round(Date.now() / 1000)
     };

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { tabs } from '$lib/state';
-  import { next, scrollTabIntoView } from '$lib/utils';
+  import { next, scrollTabIntoView, normalizeArticleName } from '$lib/utils';
   import type { Tab } from '$lib/types';
 
   let query = '';
@@ -11,7 +11,7 @@
       const newTab: Tab = {
         id: next(),
         type: 'find',
-        data: query.toLowerCase().replaceAll(' ', '-')
+        data: normalizeArticleName(query)
       };
       newTabs.push(newTab);
       tabs.set(newTabs);
@@ -31,7 +31,7 @@
   </div>
   <button
     type="submit"
-    class="-ml-px inline-flex items-center space-x-2 px-3 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-white"
+    class="-ml-px inline-flex items-center space-x-2 px-3 py-2 border border-gray-300 text-sm font-medium rounded-r-md bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-white"
     >Go</button
   >
 </form>
