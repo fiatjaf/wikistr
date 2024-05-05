@@ -20,8 +20,8 @@
       tried = true;
     }, 1500);
     return cachingSub(
-      `search-${query}`,
-      $userPreferredRelays,
+      `directsearch-${query}`,
+      $userPreferredRelays.read,
       { kinds: [wikiKind], '#d': [query.toLowerCase()], limit: 25 },
       (events) => {
         results = events;

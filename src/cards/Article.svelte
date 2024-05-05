@@ -7,11 +7,12 @@
     cachingSub,
     cachedArticles,
     userPreferredRelays,
-    fallback,
     getRelaysForEvent,
     reactionKind,
     broadcast,
-    getA
+    getA,
+    safeRelays,
+    fallbackRelays
   } from '$lib/nostr';
   import { formatDate, next } from '$lib/utils';
   import { parse } from '$lib/articleParser.js';
@@ -89,7 +90,7 @@
 
     return cachingSub(
       `article-${eventId.slice(-8)}`,
-      $userPreferredRelays.concat(fallback),
+      [...$userPreferredRelays.write, ...fallbackRelays],
       { ids: [eventId] },
       (result) => {
         event = result[0];
@@ -126,7 +127,7 @@
     cancelers.push(
       cachingSub(
         `reaction-${eventId.slice(-8)}`,
-        $userPreferredRelays,
+        [...$userPreferredRelays.read, ...safeRelays],
         { authors: [$account.pubkey], ['#a']: [getA(event)] },
         (result) => {
           canLike = false;
@@ -163,7 +164,7 @@
       created_at: Math.round(Date.now() / 1000)
     };
 
-    broadcast(eventTemplate, $userPreferredRelays);
+    broadcast(eventTemplate, [...$userPreferredRelays.write, ...safeRelays]);
   }
 </script>
 

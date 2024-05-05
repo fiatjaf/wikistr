@@ -1,6 +1,6 @@
 import { debounce } from 'debounce';
 import { readable } from 'svelte/store';
-import type { EventTemplate, Event } from 'nostr-tools/pure';
+import type { EventTemplate, Event, NostrEvent } from 'nostr-tools/pure';
 import type { Filter } from 'nostr-tools/filter';
 import { SimplePool } from 'nostr-tools/pool';
 import { normalizeURL } from 'nostr-tools/utils';
@@ -38,12 +38,14 @@ export const signer = {
   getPublicKey: async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pubkey = await (window as any).nostr.getPublicKey();
+    setUserPreferredRelays(pubkey);
     setAccount(await getMetadata(pubkey));
     return pubkey;
   },
   signEvent: async (event: EventTemplate): Promise<Event> => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const se: Event = await (window as any).nostr.signEvent(event);
+    setUserPreferredRelays(se.pubkey);
     setAccount(await getMetadata(se.pubkey));
     return se;
   }
@@ -65,7 +67,7 @@ export const account = readable<Metadata | null>(null, (set) => {
   }
 });
 
-export const fallback = [
+export const fallbackRelays = [
   'wss://relay.damus.io',
   'wss://nos.lol',
   'wss://nostr-pub.wellorder.net',
@@ -73,21 +75,61 @@ export const fallback = [
   'wss://relay.nostr.band'
 ];
 
-export const relayLists = ['wss://purplepag.es', 'wss://relay.nos.social'];
-
-export const profiles = ['wss://relay.damus.io', 'wss://relay.primal.net', 'wss://purplepag.es'];
+export const defaultWriteRelays = ['wss://nostr.mom', 'wss://nostr3.daedaluslabs.io'];
+export const relayListsRelays = ['wss://purplepag.es', 'wss://relay.nos.social'];
+export const profileRelays = [
+  'wss://relay.damus.io',
+  'wss://relay.primal.net',
+  'wss://purplepag.es'
+];
 
 export const safeRelays = [
   'wss://nostr.mom',
   'wss://nostr.wine',
   'wss://relay.snort.social',
-  'wss://nostr.land'
+  'wss://nostr.land',
+  'wss://nostr21.com'
 ];
 
-export const userPreferredRelays = readable(safeRelays, (set) => {
-  // TODO: if user logs in, query their preferred relays
-  set(safeRelays);
-});
+let setUserPreferredRelays: (_: string) => Promise<void>;
+export const userPreferredRelays = readable(
+  { read: safeRelays, write: defaultWriteRelays },
+  (set) => {
+    // TODO: if user logs in, query their preferred relays
+    setUserPreferredRelays = async (pubkey: string) => {
+      const res = await _pool.querySync([...relayListsRelays, ...fallbackRelays], {
+        kinds: [10002, 10102],
+        authors: [pubkey]
+      });
+
+      let best10002 = { created_at: 0, tags: [] } as Pick<NostrEvent, 'created_at' | 'tags'>;
+      let best10102 = { created_at: 0, tags: [] } as Pick<NostrEvent, 'created_at' | 'tags'>;
+      for (let i = 0; i < res.length; i++) {
+        const event = res[i];
+        if (event.kind === 10002 && event.created_at > best10002.created_at) {
+          best10002 = event;
+        } else if (event.kind === 10102 && event.created_at > best10102.created_at) {
+          best10102 = event;
+        }
+      }
+
+      let write = best10002.tags
+        .map((t) => t[0] === 'r' && t[1])
+        .filter((r) => r) as unknown as string[];
+      if (write.length === 0) write = defaultWriteRelays;
+
+      let read = best10002.tags
+        .map((t) => t[0] === 'r' && t[1])
+        .filter((r) => r) as unknown as string[];
+      read = read.concat(
+        best10102.tags.map((t) => t[0] === 'relay' && t[1]).filter((r) => r) as unknown as string[]
+      );
+      if (read.length === 0) read = safeRelays;
+
+      set({ read, write });
+    };
+  }
+);
 
 export const getA: KeyFunc = (event: Event) => {
   const dTag = event.tags.find(([t, v]) => t === 'd' && v)?.[1] || '';
@@ -218,7 +260,7 @@ export async function getMetadata(pubkey: string): Promise<Metadata> {
   if (metadata) return metadata;
 
   // TODO: use dexie as a second-level cache
-  const event = await _pool.get(profiles, { kinds: [0], authors: [pubkey] });
+  const event = await _pool.get(profileRelays, { kinds: [0], authors: [pubkey] });
   try {
     const metadata = JSON.parse(event!.content);
     metadata.pubkey = pubkey;

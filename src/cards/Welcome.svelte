@@ -15,7 +15,7 @@
   onMount(() => {
     return cachingSub(
       'recent',
-      $userPreferredRelays,
+      $userPreferredRelays.read,
       { kinds: [wikiKind], limit: 12 },
       handleUpdate,
       getA

@@ -23,7 +23,7 @@
 
     let { event, successes, failures, error } = await broadcast(
       eventTemplate,
-      $userPreferredRelays
+      $userPreferredRelays.write
     );
     if (successes.length === 0) {
       message = `Failed to publish: ${error}.`;
