@@ -9,10 +9,9 @@
   let dragging = false;
   let startX: number;
   let scrollLeft: number;
+  let slider: HTMLElement;
 
   onMount(() => {
-    const slider = document.getElementById('panel');
-
     document.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener('mousemove', onMouseMove);
@@ -25,6 +24,16 @@
 
     function onMouseDown(ev: MouseEvent) {
       if (!slider) return;
+
+      let proceed = false;
+      let path = ev.composedPath();
+      for (let i = 0; i < path.length; i++) {
+        if (path[i] === slider) {
+          proceed = true;
+          break;
+        }
+      }
+      if (!proceed) return;
 
       if (ev.target instanceof HTMLElement) {
         let card = getParentCard(ev.target);
@@ -47,9 +56,9 @@
     }
 
     function onMouseMove(ev: MouseEvent) {
+      ev.preventDefault();
       if (!slider) return;
       if (!dragging) return;
-      ev.preventDefault();
       slider.scrollLeft = scrollLeft + startX - ev.clientX;
     }
   });
@@ -60,7 +69,7 @@
 </svelte:head>
 
 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-<div class="flex overflow-x-scroll pb-2" id="panel" draggable="false">
+<div class="flex overflow-x-scroll pb-2" draggable="false" bind:this={slider}>
   {#each $tabs as tab (tab.id)}
     <CardElement {tab} />
   {/each}
