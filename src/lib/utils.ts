@@ -111,3 +111,12 @@ export function dataloaderCache<V>(): CacheMap<string, Promise<V>> {
     clear() {}
   };
 }
+
+export function hashbow(input: string, lightness: number): string {
+  let value = 0;
+  for (let i = 0; i < input.length; i++) {
+    value += input.charCodeAt(i);
+  }
+  value **= 17;
+  return `hsla(${value % 360}, 76%, ${lightness}%, 1)`;
+}

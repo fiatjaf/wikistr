@@ -3,7 +3,7 @@
 
   import { tabs } from '$lib/state';
   import type { Tab } from '$lib/types';
-  import { scrollTabIntoView, isElementInViewport, toURL } from '$lib/utils';
+  import { scrollTabIntoView, isElementInViewport, toURL, hashbow } from '$lib/utils';
   import Article from '$cards/Article.svelte';
   import Editor from '$cards/Editor.svelte';
   import Welcome from '$cards/Welcome.svelte';
@@ -98,6 +98,11 @@
   h-[calc(100vh_-_32px)]
   p-4"
   on:dblclick={scrollIntoViewIfNecessary}
+  style:background-color={tab.type === 'article'
+    ? hashbow(tab.data[0], 94)
+    : tab.type === 'find'
+      ? hashbow(tab.data, 88)
+      : ''}
 >
   <button on:click={close}
     ><svg

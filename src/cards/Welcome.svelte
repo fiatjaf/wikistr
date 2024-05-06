@@ -6,7 +6,7 @@
   import { signer, userPreferredRelays, wikiKind, account, _pool, getTagOr } from '$lib/nostr';
   import type { Tab } from '$lib/types';
   import UserLabel from '$components/UserLabel.svelte';
-  import { getA, next } from '$lib/utils';
+  import { next } from '$lib/utils';
   import { debounce } from 'debounce';
 
   let results: Event[] = [];
