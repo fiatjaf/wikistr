@@ -32,7 +32,7 @@ export function bareNostrUser(pubkey: string): NostrUser {
   return {
     pubkey,
     npub,
-    shortName: npub.substring(0, 8) + '…' + npub.substring(-5),
+    shortName: npub.substring(0, 8) + '…' + npub.substring(59),
     metadata: {},
     lastUpdated: 0
   };
@@ -55,7 +55,7 @@ const metadataLoader = new DataLoader<string, NostrUser, string>(
         results[i] = {
           pubkey: pubkey,
           npub,
-          shortName: npub.substring(0, 8) + '…' + npub.substring(-5),
+          shortName: npub.substring(0, 8) + '…' + npub.substring(59),
           lastUpdated: 0,
           metadata: {}
         };
