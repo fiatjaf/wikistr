@@ -32,58 +32,62 @@
   }
 
   function createChild(newChild: Tab) {
-    newChild.parent = tab.id;
+    newChild.parent = tab;
     const index = $tabs.findIndex((item) => item.id === tab.id);
-    if (tab.type !== 'new') {
-      const newTabs = $tabs.slice(0, index + 1).concat(newChild);
-      goto(
-        '/' +
-          newTabs
-            .map((tab) => toURL(tab))
-            .filter((v) => v)
-            .join('/')
-      );
+    const newTabs = $tabs.slice(0, index + 1).concat(newChild);
+    goto(
+      '/' +
+        newTabs
+          .map((tab) => toURL(tab))
+          .filter((v) => v)
+          .join('/'),
+      {
+        state: [index + 1, newChild]
+      }
+    );
 
-      setTimeout(() => {
-        if (!isElementInViewport(String(newChild.id))) {
-          scrollTabIntoView(String(newChild.id), false);
-        }
-      }, 1);
-    }
+    setTimeout(() => {
+      if (!isElementInViewport(String(newChild.id))) {
+        scrollTabIntoView(String(newChild.id), false);
+      }
+    }, 1);
   }
 
   function replaceSelf(updatedTab: Tab) {
     updatedTab.parent = tab.parent;
     const index = $tabs.findIndex((item) => item.id === tab.id);
-    if (tab.type !== 'new') {
-      const newTabs = $tabs.slice();
-      const removedChildren = newTabs.filter((item) => item.parent === tab.id);
-      removedChildren.forEach((child) => {
-        const childIndex = newTabs.indexOf(child);
-        if (childIndex !== -1) {
-          newTabs.splice(childIndex, 1);
-        }
-      });
-      newTabs[index] = updatedTab;
-      goto(
-        '/' +
-          newTabs
-            .map((tab) => toURL(tab))
-            .filter((v) => v)
-            .join('/')
-      );
-    }
+    const newTabs = $tabs.slice();
+    const removedChildren = newTabs.filter((item) => item.parent === tab);
+    removedChildren.forEach((child) => {
+      const childIndex = newTabs.indexOf(child);
+      if (childIndex !== -1) {
+        newTabs.splice(childIndex, 1);
+      }
+    });
+    newTabs[index] = updatedTab;
+    goto(
+      '/' +
+        newTabs
+          .map((tab) => toURL(tab))
+          .filter((v) => v)
+          .join('/'),
+      {
+        state: [index, updatedTab]
+      }
+    );
   }
 
   function replaceNewTab(newTab: Tab) {
-    newTab.parent = $tabs[$tabs.length - 1].id;
     const newTabs = $tabs.concat(newTab);
     goto(
       '/' +
         newTabs
           .map((tab) => toURL(tab))
           .filter((v) => v)
-          .join('/')
+          .join('/'),
+      {
+        state: [$tabs.length, newTab]
+      }
     );
 
     setTimeout(() => {

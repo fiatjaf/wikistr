@@ -20,36 +20,43 @@
     tabs.set($tabs);
     scrollTabIntoView($tabs[$tabs.length - 1].id, true);
 
-    let prev: string[] = [];
+    let prevP: string[] = [];
     return page.subscribe((v) => {
-      let next = v.params.path.split('/');
+      let nextP = v.params.path.split('/');
 
       let nextTabs: Tab[] = [];
-      for (let n = 0; n < next.length; n++) {
+      for (let n = 0; n < nextP.length; n++) {
         // for all the path parts in the next url we try to find them in the previous
         let found = false;
-        for (let p = 0; p < prev.length; p++) {
-          if (prev[p] === next[n]) {
+        for (let p = 0; p < prevP.length; p++) {
+          if (prevP[p] === nextP[n]) {
             // when we find something that means we will keep the corresponding tab
             // but at the new index (which is likely to be the same, but not always)
             nextTabs[n] = $tabs[p];
             found = true;
 
             // we also null this, so repeated pathnames cannot be re-found
-            prev[p] = '___';
+            prevP[p] = '___';
 
             break;
           }
         }
 
         if (!found) {
-          // when we didn't find we create a new tab from the path and assign it to this place
-          nextTabs[n] = tabFromPathPart(next[n]);
+          // when we didn't find we either
+          if (v.state && (v.state as [number, Tab])[0] === n) {
+            // get a tab from the routing state and assign it to this place
+            // (this is preferrable as that tab in the state might contain hints that are no available in the URL)
+            nextTabs[n] = (v.state as [number, Tab])[1];
+          } else {
+            // or create a new tab from the path and assign it to this place
+            nextTabs[n] = tabFromPathPart(nextP[n]);
+          }
         }
       }
 
       tabs.set(nextTabs);
-      prev = next;
+      prevP = nextP;
     });
   });
 

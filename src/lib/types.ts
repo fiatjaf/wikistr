@@ -1,16 +1,9 @@
-export type TabType =
-  | 'welcome'
-  | 'find'
-  | 'article'
-  | 'relay'
-  | 'settings'
-  | 'editor'
-  | 'new';
+export type TabType = 'welcome' | 'find' | 'article' | 'relay' | 'settings' | 'editor' | 'new';
 
 export interface Tab {
   id: number;
   type: TabType;
-  parent?: number;
+  parent?: Tab;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any;
 }
@@ -18,13 +11,13 @@ export interface Tab {
 export type WelcomeTab = {
   id: number;
   type: 'welcome';
-  parent?: number;
+  parent?: Tab;
 };
 
 export type SearchTab = {
   id: number;
   type: 'find';
-  parent?: number;
+  parent?: Tab;
   data: string; // article title query
   preferredAuthors: string[];
 };
@@ -32,7 +25,7 @@ export type SearchTab = {
 export type ArticleTab = {
   id: number;
   type: 'article';
-  parent?: number;
+  parent?: Tab;
   data: [string, string]; // d-tag * pubkey
   relayHints: string[];
 };
@@ -40,20 +33,20 @@ export type ArticleTab = {
 export type RelayTab = {
   id: number;
   type: 'relay';
-  parent?: number;
+  parent?: Tab;
   data: string; // relay url
 };
 
 export type SettingsTab = {
   id: number;
   type: 'settings';
-  parent?: number;
+  parent?: Tab;
 };
 
 export type EditorTab = {
   id: number;
   type: 'editor';
-  parent?: number;
+  parent?: Tab;
   data: EditorData;
 };
 
