@@ -41,6 +41,7 @@
         $userWikiRelays,
         [{ kinds: [wikiKind], '#d': [normalizeArticleName(query)], limit: 25 }],
         {
+          id: 'exactmatch',
           oneose() {
             tried = true;
           },
@@ -59,6 +60,7 @@
       );
 
       search = _pool.subscribeMany(DEFAULT_SEARCH_RELAYS, [{ kinds: [wikiKind], search: query }], {
+        id: 'search',
         onevent(evt) {
           results.push(evt);
           update();

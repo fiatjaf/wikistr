@@ -70,6 +70,8 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
 <div class="flex overflow-x-scroll pb-2" draggable="false" bind:this={slider}>
+  <CardElement tab={{ type: 'welcome', id: -1 }} />
+
   {#each $tabs as tab (tab.id)}
     <CardElement {tab} />
   {/each}
