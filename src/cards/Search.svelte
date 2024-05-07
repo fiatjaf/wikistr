@@ -4,7 +4,7 @@
   import type { Event, SubCloser } from 'nostr-tools';
 
   import { _pool, wot, wikiKind, userWikiRelays } from '$lib/nostr';
-  import type { ArticleTab, Tab } from '$lib/types';
+  import type { ArticleTab, SearchTab, Tab } from '$lib/types';
   import { getTagOr, next, normalizeArticleName } from '$lib/utils';
   import { DEFAULT_SEARCH_RELAYS } from '$lib/defaults';
   import ArticleListItem from '$components/ArticleListItem.svelte';
@@ -16,6 +16,8 @@
   let seenCache: { [id: string]: string[] } = {};
   let results: Event[] = [];
   let tried = false;
+
+  const searchTab = tab as SearchTab;
 
   onMount(() => {
     setTimeout(() => {
@@ -30,7 +32,7 @@
         } else if (getTagOr(b, 'd') === tab.data && getTagOr(a, 'd') !== tab.data) {
           return 1;
         } else {
-          return $wot[b.pubkey] - $wot[a.pubkey];
+          return ($wot[b.pubkey] || 0) - ($wot[a.pubkey] || 0);
         }
       });
     }, 500);
@@ -41,12 +43,19 @@
         $userWikiRelays,
         [{ kinds: [wikiKind], '#d': [normalizeArticleName(query)], limit: 25 }],
         {
-          id: 'exactmatch',
+          id: 'find-exactmatch',
           oneose() {
             tried = true;
           },
           onevent(evt) {
             tried = true;
+
+            if (searchTab.preferredAuthors.includes(evt.pubkey)) {
+              // we found an exact match that fits the list of preferred authors
+              // jump straight into it
+              openArticle(evt);
+            }
+
             results.push(evt);
             update();
           },
@@ -60,7 +69,7 @@
       );
 
       search = _pool.subscribeMany(DEFAULT_SEARCH_RELAYS, [{ kinds: [wikiKind], search: query }], {
-        id: 'search',
+        id: 'find-search',
         onevent(evt) {
           results.push(evt);
           update();
@@ -74,15 +83,16 @@
     };
   });
 
-  function openArticle(result: Event, ev: MouseEvent) {
+  function openArticle(result: Event, ev?: MouseEvent) {
     let articleTab: ArticleTab = {
       id: next(),
       type: 'article',
       data: [getTagOr(result, 'd'), result.pubkey],
-      relayHints: seenCache[result.id]
+      relayHints: seenCache[result.id],
+      actualEvent: result
     };
-    if (ev.button === 1) createChild(articleTab);
-    else replaceSelf(articleTab);
+    if (ev?.button === 1) createChild(articleTab);
+    else replaceSelf({ ...articleTab, back: tab });
   }
 </script>
 
@@ -105,7 +115,7 @@
     </button>
     <button
       on:click={() => createChild({ id: next(), type: 'settings' })}
-      class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      class="ml-1 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
     >
       Add more relays
     </button>

@@ -62,7 +62,17 @@
 
   function tabFromPathPart(pathPart: string): Tab {
     let ditem = decodeURIComponent(pathPart);
-    if ((ditem.split('.').length > 2 && ditem.startsWith('wss://')) || ditem.startsWith('ws://')) {
+    if (ditem.startsWith('edit:')) {
+      return {
+        id: next(),
+        type: 'editor',
+        data: { title: ditem.substring(5), summary: '', content: '' }
+      };
+    } else if (
+      ditem.split('.').length >= 2 ||
+      ditem.startsWith('wss://') ||
+      ditem.startsWith('ws://')
+    ) {
       return { id: next(), type: 'relay', data: normalizeURL(ditem) };
     } else if (pathPart.match(/^[\w-]+\*[a-f0-9]{64}$/)) {
       return { id: next(), type: 'article', data: pathPart.split('*') };

@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { debounce } from 'debounce';
   import type { Event } from 'nostr-tools';
 
   import type { ArticleTab, Tab } from '$lib/types';
-  import { getTagOr, next } from '$lib/utils';
+  import { getTagOr, next, urlWithoutScheme } from '$lib/utils';
   import { _pool, wikiKind } from '$lib/nostr';
-  import { debounce } from 'debounce';
   import ArticleListItem from '$components/ArticleListItem.svelte';
 
   export let tab: Tab;
@@ -58,7 +58,7 @@
   }
 </script>
 
-<div class="mb-0 text-2xl break-all">{tab.data}</div>
+<div class="mb-0 text-2xl break-all">{urlWithoutScheme(tab.data)}</div>
 {#each results as result (result.id)}
   <ArticleListItem event={result} {openArticle} />
 {/each}

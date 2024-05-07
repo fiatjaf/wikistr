@@ -1,5 +1,4 @@
 import type { NostrEvent } from 'nostr-tools';
-import type { Tab } from './types';
 import LRUCache from 'mnemonist/lru-cache';
 import type { CacheMap } from 'dataloader';
 
@@ -20,12 +19,26 @@ export function formatDate(unixtimestamp: number) {
   ];
 
   const date = new Date(unixtimestamp * 1000);
+  const dateday = date.toISOString().split('T')[0];
+
+  const now = Date.now();
+
+  const today = new Date(now).toISOString().split('T')[0];
+  if (dateday === today) return 'today';
+
+  const yesterday = new Date(now - 24 * 3600 * 1000).toISOString().split('T')[0];
+  if (dateday === yesterday) return 'yesterday';
+
+  if (unixtimestamp > now / 1000 - 24 * 3600 * 90) {
+    return Math.round((now / 1000 - unixtimestamp) / (24 * 3600)) + ' days ago';
+  }
+
   const day = date.getDate();
   const month = months[date.getMonth()];
   const year = date.getFullYear();
 
   const formattedDate = `${day} ${month} ${year}`;
-  return formattedDate;
+  return 'on ' + formattedDate;
 }
 
 let serial = 1;
@@ -67,18 +80,6 @@ export function isElementInViewport(el: number | string | HTMLElement) {
     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
   );
-}
-
-export function toURL(tab: Tab): string | null {
-  switch (tab.type) {
-    case 'find':
-      return tab.data;
-    case 'article':
-      return tab.data.join('*');
-    case 'relay':
-      return encodeURIComponent(tab.data);
-  }
-  return null;
 }
 
 export function getParentCard(el: HTMLElement): HTMLElement | null {
@@ -126,5 +127,15 @@ export function isATag(input: string): boolean {
 }
 
 export function urlWithoutScheme(url: string): string {
-  return url.replace('wss://', '');
+  return url.replace('wss://', '').replace(/\/+$/, '');
+}
+
+export function unique<A>(arr: A[]): A[] {
+  const result = [];
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i];
+    if (result.indexOf(item) !== -1) continue;
+    result.push(item);
+  }
+  return result;
 }

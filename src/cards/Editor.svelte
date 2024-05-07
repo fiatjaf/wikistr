@@ -71,7 +71,7 @@
 </div>
 <div class="mt-2">
   <details>
-    <summary> Add an explicit summary? </summary>
+    <summary>Add a summary?</summary>
     <label
       >Summary
       <textarea

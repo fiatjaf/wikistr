@@ -5,6 +5,7 @@ import { SimplePool } from 'nostr-tools/pool';
 import { loadNostrUser, type NostrUser } from './metadata';
 import { DEFAULT_WIKI_RELAYS } from './defaults';
 import { loadContactList, loadWikiAuthors, loadWikiRelaysList } from './lists';
+import { unique } from './utils';
 
 const startTime = Math.round(Date.now() / 1000);
 
@@ -31,7 +32,7 @@ export const signer = {
 let setUserWikiRelays: (_: string) => Promise<void>;
 export const userWikiRelays = readable<string[]>(DEFAULT_WIKI_RELAYS, (set) => {
   setUserWikiRelays = async (pubkey: string) => {
-    const rl = await loadWikiRelaysList(pubkey);
+    const rl = unique(await loadWikiRelaysList(pubkey));
     if (rl.length > 0) {
       set(rl);
     }

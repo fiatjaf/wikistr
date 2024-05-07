@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import type { Event, EventTemplate } from 'nostr-tools';
 
-  import { account, reactionKind, broadcast, _pool } from '$lib/nostr';
+  import { account, reactionKind, broadcast, _pool, wikiKind } from '$lib/nostr';
   import { formatDate, getA, next } from '$lib/utils';
   import type { ArticleTab, SearchTab, Tab } from '$lib/types';
   import { page } from '$app/stores';
@@ -18,13 +18,14 @@
   export let replaceSelf: (tab: Tab) => void;
   let event: Event | null = null;
   let copied = false;
-  let liked = false;
-  let disliked = false;
+  let likeStatus: 'liked' | 'disliked' | unknown;
   let canLike: boolean | undefined;
   const dTag = article[0];
   const pubkey = article[1];
   let author: NostrUser = bareNostrUser(pubkey);
   let seenOn: string[] = [];
+
+  const articleTab = tab as ArticleTab;
 
   $: title = event?.tags.find(([k]) => k === 'title')?.[1] || dTag;
   $: summary = event?.tags.find(([k]) => k === 'summary')?.[1];
@@ -55,13 +56,19 @@
       id: next(),
       type: 'find',
       data: dTag,
-      preferredAuthors: [event!.pubkey] // TODO: add more
+      preferredAuthors: [] // leave empty so we ensure the list of alternatives will be shown
     };
     if (ev.button === 1) createChild(nextTab);
     else replaceSelf(nextTab);
   }
 
   onMount(() => {
+    if (articleTab.actualEvent) {
+      event = articleTab.actualEvent;
+      seenOn = articleTab.relayHints;
+      return;
+    }
+
     (async () => {
       let relays = await loadRelayList(pubkey);
 
@@ -73,12 +80,16 @@
         [
           {
             authors: [pubkey],
-            '#d': [dTag]
+            '#d': [dTag],
+            kinds: [wikiKind]
           }
         ],
         {
+          id: 'article',
           receivedEvent(relay, _id) {
-            seenOn.push(relay.url);
+            if (seenOn.indexOf(relay.url) === -1) {
+              seenOn.push(relay.url);
+            }
           },
           onevent(evt) {
             if (!event || event.created_at < evt.created_at) {
@@ -178,14 +189,14 @@
           class:hidden={$account?.pubkey === event.pubkey}
         >
           <a
-            title={canLike ? '' : liked ? 'you considered this a good article' : ''}
+            title={canLike ? '' : likeStatus === 'like' ? 'you considered this a good article' : ''}
             class:cursor-pointer={canLike}
             on:click={() => vote('+')}
           >
             <svg
               class:fill-stone-600={canLike}
-              class:fill-cyan-500={liked}
-              class:hidden={disliked}
+              class:fill-cyan-500={likeStatus === 'like'}
+              class:hidden={likeStatus === 'disliked'}
               width="18"
               height="18"
               viewBox="0 0 18 18"><path d="M1 12h16L9 4l-8 8Z"></path></svg
@@ -194,7 +205,7 @@
           <a
             title={canLike
               ? 'this is a bad article'
-              : disliked
+              : likeStatus === 'disliked'
                 ? 'you considered this a bad article'
                 : ''}
             class:cursor-pointer={canLike}
@@ -202,8 +213,8 @@
           >
             <svg
               class:fill-stone-600={canLike}
-              class:fill-rose-400={disliked}
-              class:hidden={liked}
+              class:fill-rose-400={likeStatus === 'disliked'}
+              class:hidden={likeStatus === 'liked'}
               width="18"
               height="18"
               viewBox="0 0 18 18"><path d="M1 6h16l-8 8-8-8Z"></path></svg
@@ -216,7 +227,7 @@
         <div>
           by <UserLabel pubkey={event.pubkey} />
           {#if event.created_at}
-            on {formatDate(event.created_at)}
+            {formatDate(event.created_at)}
           {/if}
           <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
         </div>

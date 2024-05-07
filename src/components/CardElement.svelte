@@ -1,8 +1,8 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { tabs } from '$lib/state';
-  import type { Tab } from '$lib/types';
-  import { scrollTabIntoView, isElementInViewport, toURL, hashbow } from '$lib/utils';
+  import type { EditorTab, Tab } from '$lib/types';
+  import { scrollTabIntoView, isElementInViewport, hashbow, urlWithoutScheme } from '$lib/utils';
   import Article from '$cards/Article.svelte';
   import Editor from '$cards/Editor.svelte';
   import Welcome from '$cards/Welcome.svelte';
@@ -100,6 +100,20 @@
   function scrollIntoViewIfNecessary(ev: MouseEvent & { currentTarget: HTMLElement }) {
     if (!isElementInViewport(ev.currentTarget)) scrollTabIntoView(ev.currentTarget, false);
   }
+
+  function toURL(tab: Tab): string | null {
+    switch (tab.type) {
+      case 'find':
+        return tab.data;
+      case 'article':
+        return tab.data.join('*');
+      case 'relay':
+        return encodeURIComponent(urlWithoutScheme(tab.data));
+      case 'editor':
+        return 'edit:' + (tab as EditorTab).data.title;
+    }
+    return null;
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
@@ -121,7 +135,23 @@
       : ''}
 >
   {#if tab.type !== 'welcome' && tab.type !== 'new'}
-    <div class="flex justify-end">
+    <div class="flex" class:justify-between={tab.back} class:justify-end={!tab.back}>
+      {#if tab.back}
+        <button on:click={close}>
+          <svg
+            fill="#000000"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:xlink="http://www.w3.org/1999/xlink"
+            viewBox="0 0 60.731 60.73"
+            xml:space="preserve"
+            ><g stroke-linecap="round" stroke-linejoin="round"></g><g>
+              <polygon
+                points="0,30.365 29.737,60.105 29.737,42.733 60.731,42.729 60.731,18.001 29.737,17.999 29.737,0.625 "
+              ></polygon>
+            </g></svg
+          >
+        </button>
+      {/if}
       <button on:click={close}>
         <svg
           xmlns="http://www.w3.org/2000/svg"

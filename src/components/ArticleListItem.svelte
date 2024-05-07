@@ -4,6 +4,7 @@
   import MarkdownIt from 'markdown-it';
 
   import UserLabel from './UserLabel.svelte';
+  import { formatDate } from '$lib/utils';
 
   const mdTxt = new MarkdownIt().use(MarkdownItPlainText);
 
@@ -38,6 +39,7 @@
   </h1>
   <p class="text-xs">
     by <UserLabel pubkey={event.pubkey} />
+    {formatDate(event.created_at)}
   </p>
   <p class="text-xs text-wrap break-words whitespace-pre-wrap">
     {#if event.tags.find((e) => e[0] == 'summary')?.[0] && event.tags.find((e) => e[0] == 'summary')?.[1]}

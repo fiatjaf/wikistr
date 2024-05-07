@@ -1,12 +1,12 @@
 <script lang="ts">
-  import type { Tab } from '$lib/types';
+  import type { SearchTab, Tab } from '$lib/types';
   import { next } from '$lib/utils';
 
   export let href: string;
   export let title: string;
   export let text: string;
-  export let extra: (tab: Tab) => void;
-  const createChild = extra;
+  export let extra: { preferredAuthors: string[]; createChild: (tab: Tab) => void };
+  const { preferredAuthors, createChild } = extra;
 
   let wikitarget: string;
   if (href.startsWith('wikilink:')) {
@@ -14,7 +14,7 @@
   }
 
   function handleWikilinkClick() {
-    createChild({ id: next(), type: 'find', data: wikitarget });
+    createChild({ id: next(), type: 'find', data: wikitarget, preferredAuthors } as SearchTab);
   }
 </script>
 
