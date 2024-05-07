@@ -22,10 +22,9 @@
     const index = $tabs.findIndex((item) => item.id === tab.id);
     const newTabs = [...$tabs];
     newTabs.splice(index, 1);
-    tabs.set(newTabs);
     goto(
       '/' +
-        $tabs
+        newTabs
           .map((tab) => toURL(tab))
           .filter((v) => v)
           .join('/')
@@ -37,10 +36,9 @@
     const index = $tabs.findIndex((item) => item.id === tab.id);
     if (tab.type !== 'new') {
       const newTabs = $tabs.slice(0, index + 1).concat(newChild);
-      tabs.set(newTabs);
       goto(
         '/' +
-          $tabs
+          newTabs
             .map((tab) => toURL(tab))
             .filter((v) => v)
             .join('/')
@@ -67,10 +65,9 @@
         }
       });
       newTabs[index] = updatedTab;
-      tabs.set(newTabs);
       goto(
         '/' +
-          $tabs
+          newTabs
             .map((tab) => toURL(tab))
             .filter((v) => v)
             .join('/')
@@ -81,10 +78,9 @@
   function replaceNewTab(newTab: Tab) {
     newTab.parent = $tabs[$tabs.length - 1].id;
     const newTabs = $tabs.concat(newTab);
-    tabs.set(newTabs);
     goto(
       '/' +
-        $tabs
+        newTabs
           .map((tab) => toURL(tab))
           .filter((v) => v)
           .join('/')
