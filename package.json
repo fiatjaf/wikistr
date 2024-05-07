@@ -43,6 +43,7 @@
     "@tailwindcss/typography": "^0.5.9",
     "dataloader": "^2.2.2",
     "debounce": "^1.2.1",
+    "idb-keyval": "^6.2.1",
     "markdown-it": "^13.0.2",
     "markdown-it-plain-text": "^0.3.0",
     "mnemonist": "^0.39.8",

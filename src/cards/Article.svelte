@@ -2,21 +2,15 @@
   import { onMount } from 'svelte';
   import type { Event, EventTemplate } from 'nostr-tools';
 
-  import {
-    account,
-    userPreferredRelays,
-    getRelaysForEvent,
-    reactionKind,
-    broadcast,
-    _pool
-  } from '$lib/nostr';
+  import { account, reactionKind, broadcast, _pool } from '$lib/nostr';
   import { formatDate, getA, next } from '$lib/utils';
-  import type { RelayTab, SearchTab, Tab } from '$lib/types';
+  import type { ArticleTab, SearchTab, Tab } from '$lib/types';
   import { page } from '$app/stores';
   import UserLabel from '$components/UserLabel.svelte';
   import ArticleContent from '$components/ArticleContent.svelte';
   import { loadRelayList } from '$lib/lists';
   import { loadNostrUser, bareNostrUser, type NostrUser } from '$lib/metadata';
+  import RelayItem from '$components/RelayItem.svelte';
 
   export let article: [string, string];
   export let tab: Tab;
@@ -30,10 +24,10 @@
   const dTag = article[0];
   const pubkey = article[1];
   let author: NostrUser = bareNostrUser(pubkey);
+  let seenOn: string[] = [];
 
   $: title = event?.tags.find(([k]) => k === 'title')?.[1] || dTag;
   $: summary = event?.tags.find(([k]) => k === 'summary')?.[1];
-  $: relaysForEvent = event ? getRelaysForEvent(event) : [];
 
   function edit() {
     replaceSelf({
@@ -60,15 +54,11 @@
     let nextTab: SearchTab = {
       id: next(),
       type: 'find',
-      data: dTag
+      data: dTag,
+      preferredAuthors: [event!.pubkey] // TODO: add more
     };
     if (ev.button === 1) createChild(nextTab);
     else replaceSelf(nextTab);
-  }
-
-  function openRelay(relay: string) {
-    let relayTab: RelayTab = { id: next(), type: 'relay', data: relay };
-    createChild(relayTab);
   }
 
   onMount(() => {
@@ -76,7 +66,10 @@
       let relays = await loadRelayList(pubkey);
 
       _pool.subscribeMany(
-        relays.filter((ri) => ri.write).map((ri) => ri.url),
+        relays
+          .filter((ri) => ri.write)
+          .map((ri) => ri.url)
+          .concat((tab as ArticleTab).relayHints),
         [
           {
             authors: [pubkey],
@@ -84,6 +77,9 @@
           }
         ],
         {
+          receivedEvent(relay, _id) {
+            seenOn.push(relay.url);
+          },
           onevent(evt) {
             if (!event || event.created_at < evt.created_at) {
               event = evt;
@@ -145,22 +141,26 @@
     //);
   }
 
-  function vote(v: '+' | '-') {
+  async function vote(v: '+' | '-') {
     if (!event) return;
     if (!canLike) return;
 
-    let relays = Array.from(getRelaysForEvent(event));
     let eventTemplate: EventTemplate = {
       kind: reactionKind,
       tags: [
-        ['a', getA(event), relays[0] || ''],
-        ['e', event.id, relays[1] || relays[0] || '']
+        ['a', getA(event), seenOn[0] || ''],
+        ['e', event.id, seenOn[1] || seenOn[0] || '']
       ],
       content: v,
       created_at: Math.round(Date.now() / 1000)
     };
 
-    broadcast(eventTemplate, $userPreferredRelays.write);
+    let relays = await loadRelayList(pubkey);
+    broadcast(eventTemplate, [
+      ...(tab as ArticleTab).relayHints,
+      ...relays.filter((ri) => ri.read).map((ri) => ri.url),
+      ...seenOn
+    ]);
   }
 </script>
 
@@ -172,43 +172,45 @@
     Loading article {dTag} from {author.shortName}
   {:else}
     <div class="flex items-center">
-      <div
-        class="flex flex-col items-center space-y-2 mr-3"
-        class:hidden={$account?.pubkey === event.pubkey}
-      >
-        <a
-          title={canLike ? '' : liked ? 'you considered this a good article' : ''}
-          class:cursor-pointer={canLike}
-          on:click={() => vote('+')}
+      {#if $account}
+        <div
+          class="flex flex-col items-center space-y-2 mr-3"
+          class:hidden={$account?.pubkey === event.pubkey}
         >
-          <svg
-            class:fill-stone-600={canLike}
-            class:fill-cyan-500={liked}
-            class:hidden={disliked}
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"><path d="M1 12h16L9 4l-8 8Z"></path></svg
+          <a
+            title={canLike ? '' : liked ? 'you considered this a good article' : ''}
+            class:cursor-pointer={canLike}
+            on:click={() => vote('+')}
           >
-        </a>
-        <a
-          title={canLike
-            ? 'this is a bad article'
-            : disliked
-              ? 'you considered this a bad article'
-              : ''}
-          class:cursor-pointer={canLike}
-          on:click={() => vote('-')}
-        >
-          <svg
-            class:fill-stone-600={canLike}
-            class:fill-rose-400={disliked}
-            class:hidden={liked}
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"><path d="M1 6h16l-8 8-8-8Z"></path></svg
+            <svg
+              class:fill-stone-600={canLike}
+              class:fill-cyan-500={liked}
+              class:hidden={disliked}
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"><path d="M1 12h16L9 4l-8 8Z"></path></svg
+            >
+          </a>
+          <a
+            title={canLike
+              ? 'this is a bad article'
+              : disliked
+                ? 'you considered this a bad article'
+                : ''}
+            class:cursor-pointer={canLike}
+            on:click={() => vote('-')}
           >
-        </a>
-      </div>
+            <svg
+              class:fill-stone-600={canLike}
+              class:fill-rose-400={disliked}
+              class:hidden={liked}
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"><path d="M1 6h16l-8 8-8-8Z"></path></svg
+            >
+          </a>
+        </div>
+      {/if}
       <div class="ml-2 mb-4">
         <div class="mt-2 font-bold text-4xl">{title || dTag}</div>
         <div>
@@ -235,21 +237,11 @@
       <ArticleContent {event} {createChild} />
     </div>
 
-    {#if relaysForEvent.length}
-      <div class="mt-4">
-        <div class="font-bold text-lg">Found on relays</div>
-        <ul class="list-disc m-0 pt-2 px-5">
-          {#each relaysForEvent as r}
-            <li class="p-0 m-0">
-              <a
-                class="cursor-pointer underline"
-                on:mouseup|preventDefault={openRelay.bind(null, r)}
-              >
-                {new URL(r).host}
-              </a>
-            </li>
-          {/each}
-        </ul>
+    {#if seenOn.length}
+      <div class="mt-4 flex flex-wrap items-center">
+        {#each seenOn as r (r)}
+          <RelayItem url={r} {createChild} />
+        {/each}
       </div>
     {/if}
   {/if}

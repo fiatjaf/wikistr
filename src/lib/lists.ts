@@ -5,9 +5,20 @@ import type { SubCloser } from 'nostr-tools/abstract-pool';
 
 import { _pool } from './nostr';
 
-import { DEFAULT_FALLBACK_RELAYS, DEFAULT_RELAYLIST_RELAYS } from './defaults';
+import {
+  DEFAULT_FALLBACK_RELAYS,
+  DEFAULT_METADATA_QUERY_RELAYS,
+  DEFAULT_RELAYLIST_RELAYS
+} from './defaults';
 import { normalizeURL } from 'nostr-tools/utils';
 import { dataloaderCache } from './utils';
+
+let serial = 0;
+
+function randomPick<L>(list: L[]): L {
+  serial++;
+  return list[serial % list.length];
+}
 
 export type RelayItem = {
   url: string;
@@ -19,6 +30,11 @@ export const loadRelayList = makeListFetcher<RelayItem>(
   10002,
   DEFAULT_RELAYLIST_RELAYS,
   itemsFromTags<RelayItem>(nip65RelayFromTag)
+);
+export const loadContactList = makeListFetcher<string>(
+  3,
+  DEFAULT_METADATA_QUERY_RELAYS,
+  itemsFromTags<string>(pFromTag)
 );
 export const loadWikiRelaysList = makeListFetcher<string>(
   10102,
@@ -35,7 +51,8 @@ function itemsFromTags<I>(
   tagProcessor: (tag: string[]) => Promise<I | undefined> | I | undefined
 ): (event: NostrEvent | undefined) => Promise<I[]> {
   return async (event: NostrEvent | undefined) => {
-    return (event ? (await Promise.all(event.tags.map(tagProcessor))).filter(identity) : []) as I[];
+    const items = event ? (await Promise.all(event.tags.map(tagProcessor))).filter(identity) : [];
+    return items as I[];
   };
 }
 
@@ -53,8 +70,10 @@ function makeListFetcher<I>(
         const filtersByRelay: { [url: string]: Filter[] } = {};
         for (let i = 0; i < requests.length; i++) {
           const req = requests[i];
-          const relays = req.relays.slice(0, Math.max(4, req.relays.length));
-          relays.push(...hardcodedRelays);
+          const relays = req.relays.slice(0, Math.min(4, req.relays.length));
+          do {
+            relays.push(randomPick(hardcodedRelays));
+          } while (relays.length < 3);
           for (let j = 0; j < relays.length; j++) {
             const url = relays[j];
             let filters = filtersByRelay[url];
@@ -70,6 +89,7 @@ function makeListFetcher<I>(
           let handle: SubCloser | undefined;
           // eslint-disable-next-line prefer-const
           handle = _pool.subscribeManyMap(filtersByRelay, {
+            id: `kind:${kind}:batch(${requests.length})`,
             onevent(evt) {
               for (let i = 0; i < requests.length; i++) {
                 if (requests[i].target === evt.pubkey) {
@@ -84,7 +104,12 @@ function makeListFetcher<I>(
               handle?.close();
             },
             async onclose() {
-              resolve(await Promise.all(results.map(process)));
+              const processed: (I[] | Promise<I[]>)[] = Array(results.length);
+              for (let i = 0; i < results.length; i++) {
+                processed[i] = process(results[i]);
+              }
+
+              resolve(await Promise.all(processed));
             }
           });
         } catch (err) {
@@ -93,6 +118,7 @@ function makeListFetcher<I>(
       }),
     {
       cache: true,
+      cacheKeyFn: (req) => req.target,
       cacheMap: cache
     }
   );
@@ -118,8 +144,8 @@ function relayFromTag(tag: string[]): string | undefined {
 }
 
 function pFromTag(tag: string[]): string | undefined {
-  if (tag.length === 2 && tag[0] === 'p') {
-    return normalizeURL(tag[1]);
+  if (tag.length >= 2 && tag[0] === 'p') {
+    return tag[1];
   }
 }
 

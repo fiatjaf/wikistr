@@ -63,6 +63,7 @@ const metadataLoader = new DataLoader<string, NostrUser, string>(
 
       try {
         _pool.subscribeManyEose(DEFAULT_METADATA_QUERY_RELAYS, [filter], {
+    id: `metadata(${keys.length})`,
           onevent(evt) {
             for (let i = 0; i < keys.length; i++) {
               if (keys[i] === evt.pubkey) {

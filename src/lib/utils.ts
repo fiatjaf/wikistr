@@ -100,16 +100,8 @@ export function getA(event: NostrEvent) {
 
 export function dataloaderCache<V>(): CacheMap<string, Promise<V>> {
   const cache = new LRUCache<string, Promise<V>>(2000);
-  return {
-    get(key) {
-      return cache.get(key);
-    },
-    set(key, value) {
-      cache.set(key, value);
-    },
-    delete(_key) {},
-    clear() {}
-  };
+  (cache as any).delete = (_key: string) => {};
+  return cache as unknown as CacheMap<string, Promise<V>>;
 }
 
 export function hashbow(input: string, lightness: number): string {
@@ -119,4 +111,20 @@ export function hashbow(input: string, lightness: number): string {
   }
   value **= 17;
   return `hsla(${value % 360}, 76%, ${lightness}%, 1)`;
+}
+
+export function getTagOr(event: NostrEvent, tagName: string, dflt: string = '') {
+  return event.tags.find(([t]) => t === tagName)?.[1] || dflt;
+}
+
+export function isHex32(input: string): boolean {
+  return Boolean(input.match(/^[a-f0-9]{64}$/));
+}
+
+export function isATag(input: string): boolean {
+  return Boolean(input.match(/^\d+:[0-9a-f]{64}:[^:]+$/));
+}
+
+export function urlWithoutScheme(url: string): string {
+  return url.replace('wss://', '');
 }

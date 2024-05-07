@@ -12,6 +12,7 @@ export const DEFAULT_RELAYLIST_RELAYS = [
 
 export const DEFAULT_ARBITRARY_IDS_RELAYS = [
   'wss://cache2.primal.net/v1',
+  'wss://relay.damus.io',
   'wss://relay.nostr.band'
 ];
 
@@ -19,6 +20,13 @@ export const DEFAULT_FALLBACK_RELAYS = [
   'wss://relay.wikifreedia.xyz',
   'wss://nos.lol',
   'wss://relay.nostr.bg',
+  'wss://relay.nostr.band'
+];
+
+export const DEFAULT_WIKI_RELAYS = [
+  'wss://relay.wikifreedia.xyz',
+  'wss://nostr.wine',
+  'wss://nostr21.com',
   'wss://relay.nostr.band'
 ];
 

@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { wikiKind, broadcast, userPreferredRelays } from '$lib/nostr';
+  import { DEFAULT_WIKI_RELAYS } from '$lib/defaults';
+  import { loadRelayList } from '$lib/lists';
+  import { wikiKind, broadcast, account } from '$lib/nostr';
   import type { EditorData, Tab } from '$lib/types.ts';
   import { next, normalizeArticleName } from '$lib/utils';
   import type { EventTemplate } from 'nostr-tools';
@@ -23,7 +25,10 @@
 
     let { event, successes, failures, error } = await broadcast(
       eventTemplate,
-      $userPreferredRelays.write
+      (await loadRelayList($account!.pubkey))
+        .filter((ri) => ri.write)
+        .map((ri) => ri.url)
+        .concat(DEFAULT_WIKI_RELAYS)
     );
     if (successes.length === 0) {
       message = `Failed to publish: ${error}.`;

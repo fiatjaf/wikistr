@@ -1,20 +1,19 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { debounce } from 'debounce';
   import type { Event, SubCloser } from 'nostr-tools';
 
-  import { _pool, account, getTagOr, userPreferredRelays, wikiKind } from '$lib/nostr';
+  import { _pool, wot, wikiKind, userWikiRelays } from '$lib/nostr';
   import type { ArticleTab, Tab } from '$lib/types';
-  import { parsePlainText } from '$lib/articleParser';
-  import UserLabel from '$components/UserLabel.svelte';
-  import { next, normalizeArticleName } from '$lib/utils';
+  import { getTagOr, next, normalizeArticleName } from '$lib/utils';
   import { DEFAULT_SEARCH_RELAYS } from '$lib/defaults';
-  import { loadWikiRelaysList } from '$lib/lists';
-  import { debounce } from 'debounce';
+  import ArticleListItem from '$components/ArticleListItem.svelte';
 
   export let query: string;
   export let tab: Tab;
   export let replaceSelf: (tab: Tab) => void;
   export let createChild: (tab: Tab) => void;
+  let seenCache: { [id: string]: string[] } = {};
   let results: Event[] = [];
   let tried = false;
 
@@ -24,15 +23,22 @@
     }, 1500);
 
     const update = debounce(() => {
-      results = results;
+      // sort by exact matches first, then by wotness
+      results = results.sort((a, b) => {
+        if (getTagOr(a, 'd') === tab.data && getTagOr(b, 'd') !== tab.data) {
+          return -1;
+        } else if (getTagOr(b, 'd') === tab.data && getTagOr(a, 'd') !== tab.data) {
+          return 1;
+        } else {
+          return $wot[b.pubkey] - $wot[a.pubkey];
+        }
+      });
     }, 500);
 
     let search: SubCloser, sub: SubCloser;
     (async () => {
-      let wikiRelays = $account ? await loadWikiRelaysList($account?.pubkey) : [];
-
       sub = _pool.subscribeMany(
-        [...wikiRelays, ...$userPreferredRelays.read],
+        $userWikiRelays,
         [{ kinds: [wikiKind], '#d': [normalizeArticleName(query)], limit: 25 }],
         {
           oneose() {
@@ -42,6 +48,12 @@
             tried = true;
             results.push(evt);
             update();
+          },
+          receivedEvent(relay, id) {
+            if (!(id in seenCache)) {
+              seenCache[id] = [];
+            }
+            seenCache[id].push(relay.url);
           }
         }
       );
@@ -64,7 +76,8 @@
     let articleTab: ArticleTab = {
       id: next(),
       type: 'article',
-      data: [getTagOr(result, 'd'), result.pubkey]
+      data: [getTagOr(result, 'd'), result.pubkey],
+      relayHints: seenCache[result.id]
     };
     if (ev.button === 1) createChild(articleTab);
     else replaceSelf(articleTab);
@@ -72,40 +85,13 @@
 </script>
 
 <div class="mt-2 font-bold text-4xl">"{query}"</div>
-{#each results as result}
-  <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-  <div
-    on:mouseup|preventDefault={openArticle.bind(null, result)}
-    class="cursor-pointer px-4 py-5 bg-white border border-gray-300 hover:bg-slate-50 rounded-lg mt-2 min-h-[48px]"
-  >
-    <h1>
-      {result.tags.find(([t]) => t == 'title')?.[1] || result.tags.find(([t]) => t == 'd')?.[1]}
-    </h1>
-    <div class="text-xs flex justify-between">
-      <span>
-        by <UserLabel pubkey={result.pubkey} />
-      </span>
-    </div>
-    <p class="text-xs">
-      {#if result.tags.find((e) => e[0] == 'summary')?.[0] && result.tags.find((e) => e[0] == 'summary')?.[1]}
-        {result.tags
-          .find((e) => e[0] == 'summary')?.[1]
-          .slice(
-            0,
-            192
-          )}{#if String(result.tags.find((e) => e[0] == 'summary')?.[1])?.length > 192}...{/if}
-      {:else}
-        {result.content.length <= 192
-          ? parsePlainText(result.content.slice(0, 189))
-          : parsePlainText(result.content.slice(0, 189)) + '...'}
-      {/if}
-    </p>
-  </div>
+{#each results as result (result.id)}
+  <ArticleListItem event={result} {openArticle} />
 {/each}
 {#if tried}
-  <div class="px-4 py-5 bg-white border border-gray-300 rounded-lg mt-2">
+  <div class="px-4 py-5 bg-white border-2 border-stone rounded-lg mt-2">
     <p class="mb-2 mt-0">
-      {results.length < 1 ? "Can't find this article" : "Didn't find what you are looking for?"}
+      {results.length < 1 ? "Can't find this article." : "Didn't find what you were looking for?"}
     </p>
     <button
       on:click={() => {

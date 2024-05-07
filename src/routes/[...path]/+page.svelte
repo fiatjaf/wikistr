@@ -4,6 +4,7 @@
 
   import { tabs } from '$lib/state';
   import { next, scrollTabIntoView } from '$lib/utils';
+  import { normalizeURL } from 'nostr-tools/utils';
 
   onMount(() => {
     if ($tabs.length !== 0) return;
@@ -15,8 +16,11 @@
       .filter((str) => str !== '')
       .forEach((item: string) => {
         let ditem = decodeURIComponent(item);
-        if (ditem.startsWith('wss://') || ditem.startsWith('ws://')) {
-          $tabs.push({ id: next(), type: 'relay', data: ditem });
+        if (
+          (ditem.split('.').length > 2 && ditem.startsWith('wss://')) ||
+          ditem.startsWith('ws://')
+        ) {
+          $tabs.push({ id: next(), type: 'relay', data: normalizeURL(ditem) });
         } else if (item.match(/^[\w-]+\*[a-f0-9]{64}$/)) {
           $tabs.push({ id: next(), type: 'article', data: item.split('*') });
         } else {

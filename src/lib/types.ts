@@ -1,4 +1,11 @@
-export type TabType = 'welcome' | 'find' | 'article' | 'relay' | 'settings' | 'editor' | 'new';
+export type TabType =
+  | 'welcome'
+  | 'find'
+  | 'article'
+  | 'relay'
+  | 'settings'
+  | 'editor'
+  | 'new';
 
 export interface Tab {
   id: number;
@@ -10,40 +17,42 @@ export interface Tab {
 
 export type WelcomeTab = {
   id: number;
-  type: TabType;
+  type: 'welcome';
   parent?: number;
 };
 
 export type SearchTab = {
   id: number;
-  type: TabType;
+  type: 'find';
   parent?: number;
   data: string; // article title query
+  preferredAuthors: string[];
 };
 
 export type ArticleTab = {
   id: number;
-  type: TabType;
+  type: 'article';
   parent?: number;
   data: [string, string]; // d-tag * pubkey
+  relayHints: string[];
 };
 
 export type RelayTab = {
   id: number;
-  type: TabType;
+  type: 'relay';
   parent?: number;
   data: string; // relay url
 };
 
 export type SettingsTab = {
   id: number;
-  type: TabType;
+  type: 'settings';
   parent?: number;
 };
 
 export type EditorTab = {
   id: number;
-  type: TabType;
+  type: 'editor';
   parent?: number;
   data: EditorData;
 };

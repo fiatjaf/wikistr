@@ -1,21 +1,19 @@
 <script lang="ts">
-  import { tabs } from '$lib/state';
-  import { next, scrollTabIntoView, normalizeArticleName } from '$lib/utils';
-  import type { Tab } from '$lib/types';
+  import { next, normalizeArticleName } from '$lib/utils';
+  import type { SearchTab, Tab } from '$lib/types';
 
+  export let replaceNewTab: (tab: Tab) => void;
   let query = '';
 
   function search() {
     if (query) {
-      let newTabs = $tabs;
-      const newTab: Tab = {
+      const newTab: SearchTab = {
         id: next(),
         type: 'find',
-        data: normalizeArticleName(query)
+        data: normalizeArticleName(query),
+        preferredAuthors: []
       };
-      newTabs.push(newTab);
-      tabs.set(newTabs);
-      scrollTabIntoView(String(newTab.id), true);
+      replaceNewTab(newTab);
       query = '';
     }
   }
@@ -26,7 +24,7 @@
     <input
       bind:value={query}
       class="focus:ring-indigo-500 focus:border-indigo-500 block w-full rounded-none rounded-l-md sm:text-sm border-gray-300"
-      placeholder="article name"
+      placeholder="article name or search term"
     />
   </div>
   <button

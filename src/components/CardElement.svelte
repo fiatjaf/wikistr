@@ -1,6 +1,5 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-
   import { tabs } from '$lib/state';
   import type { Tab } from '$lib/types';
   import { scrollTabIntoView, isElementInViewport, toURL, hashbow } from '$lib/utils';
@@ -21,24 +20,22 @@
 
   function removeSelf() {
     const index = $tabs.findIndex((item) => item.id === tab.id);
-    if (index !== -1) {
-      const newTabs = [...$tabs];
-      newTabs.splice(index, 1);
-      tabs.set(newTabs);
-      goto(
-        '/' +
-          $tabs
-            .map((tab) => toURL(tab))
-            .filter((v) => v)
-            .join('/')
-      );
-    }
+    const newTabs = [...$tabs];
+    newTabs.splice(index, 1);
+    tabs.set(newTabs);
+    goto(
+      '/' +
+        $tabs
+          .map((tab) => toURL(tab))
+          .filter((v) => v)
+          .join('/')
+    );
   }
 
   function createChild(newChild: Tab) {
     newChild.parent = tab.id;
     const index = $tabs.findIndex((item) => item.id === tab.id);
-    if (index !== -1) {
+    if (tab.type !== 'new') {
       const newTabs = $tabs.slice(0, index + 1).concat(newChild);
       tabs.set(newTabs);
       goto(
@@ -60,7 +57,7 @@
   function replaceSelf(updatedTab: Tab) {
     updatedTab.parent = tab.parent;
     const index = $tabs.findIndex((item) => item.id === tab.id);
-    if (index !== -1) {
+    if (tab.type !== 'new') {
       const newTabs = $tabs.slice();
       const removedChildren = newTabs.filter((item) => item.parent === tab.id);
       removedChildren.forEach((child) => {
@@ -81,6 +78,25 @@
     }
   }
 
+  function replaceNewTab(newTab: Tab) {
+    newTab.parent = $tabs[$tabs.length - 1].id;
+    const newTabs = $tabs.concat(newTab);
+    tabs.set(newTabs);
+    goto(
+      '/' +
+        $tabs
+          .map((tab) => toURL(tab))
+          .filter((v) => v)
+          .join('/')
+    );
+
+    setTimeout(() => {
+      if (!isElementInViewport(String(newTab.id))) {
+        scrollTabIntoView(String(newTab.id), false);
+      }
+    }, 1);
+  }
+
   function scrollIntoViewIfNecessary(ev: MouseEvent & { currentTarget: HTMLElement }) {
     if (!isElementInViewport(ev.currentTarget)) scrollTabIntoView(ev.currentTarget, false);
   }
@@ -94,7 +110,7 @@
   overflow-x-hidden
   mx-2 mt-2
   min-w-[395px] max-w-[395px] lg:min-w-[32rem] lg:max-w-[32rem]
-  rounded-lg border border-slate-500 bg-slate-50
+  rounded-lg border-4 border-stone-200 bg-stone-50
   h-[calc(100vh_-_32px)]
   p-4"
   on:dblclick={scrollIntoViewIfNecessary}
@@ -119,7 +135,7 @@
     {#if tab.type === 'article'}
       <Article {createChild} {replaceSelf} article={tab.data} {tab} />
     {:else if tab.type === 'new'}
-      <New />
+      <New {replaceNewTab} />
     {:else if tab.type === 'find'}
       <Search {createChild} {replaceSelf} query={tab.data} {tab} />
     {:else if tab.type === 'welcome'}
