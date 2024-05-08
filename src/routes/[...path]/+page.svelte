@@ -6,6 +6,7 @@
   import { next, scrollTabIntoView } from '$lib/utils';
   import { normalizeURL } from 'nostr-tools/utils';
   import type { Tab } from '$lib/types';
+  import { decode } from 'nostr-tools/nip19';
 
   onMount(() => {
     if ($tabs.length !== 0) return;
@@ -18,7 +19,10 @@
       });
 
     tabs.set($tabs);
-    scrollTabIntoView($tabs[$tabs.length - 1].id, true);
+
+    if ($tabs.length) {
+      scrollTabIntoView($tabs[$tabs.length - 1].id, true);
+    }
 
     let prevP: string[] = [];
     return page.subscribe((v) => {
@@ -68,6 +72,8 @@
         type: 'editor',
         data: { title: ditem.substring(5), summary: '', content: '' }
       };
+    } else if (ditem.startsWith('npub1')) {
+      return { id: next(), type: 'user', data: decode(ditem).data as string };
     } else if (
       ditem.split('.').length >= 2 ||
       ditem.startsWith('wss://') ||

@@ -7,7 +7,7 @@ export type EditorData = {
   previous: ArticleTab | undefined;
 };
 
-export type TabType = 'welcome' | 'find' | 'article' | 'relay' | 'settings' | 'editor' | 'new';
+export type TabType = 'welcome' | 'find' | 'article' | 'relay' | 'user' | 'settings' | 'editor' | 'new';
 
 export interface Tab {
   id: number;
@@ -50,6 +50,14 @@ export type RelayTab = {
   parent?: Tab;
   back?: Tab;
   data: string; // relay url
+};
+
+export type UserTab = {
+  id: number;
+  type: 'user';
+  parent?: Tab;
+  back?: Tab;
+  data: string; // user pubkey
 };
 
 export type SettingsTab = {

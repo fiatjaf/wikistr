@@ -130,12 +130,15 @@ export function urlWithoutScheme(url: string): string {
   return url.replace('wss://', '').replace(/\/+$/, '');
 }
 
-export function unique<A>(arr: A[]): A[] {
+export function unique<A>(...arrs: A[][]): A[] {
   const result = [];
-  for (let i = 0; i < arr.length; i++) {
-    const item = arr[i];
-    if (result.indexOf(item) !== -1) continue;
-    result.push(item);
+  for (let i = 0; i < arrs.length; i++) {
+    const arr = arrs[i];
+    for (let j = 0; j < arr.length; j++) {
+      const item = arr[j];
+      if (result.indexOf(item) !== -1) continue;
+      result.push(item);
+    }
   }
   return result;
 }

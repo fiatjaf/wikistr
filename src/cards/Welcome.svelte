@@ -4,16 +4,25 @@
   import type { SubCloser } from 'nostr-tools/abstract-pool';
   import type { Event, NostrEvent } from 'nostr-tools/pure';
 
-  import { signer, userWikiRelays, wikiKind, account, _pool, wot } from '$lib/nostr';
+  import {
+    signer,
+    wikiKind,
+    account,
+    _pool,
+    wot,
+    getBasicUserWikiRelays,
+    userWikiRelays
+  } from '$lib/nostr';
   import type { ArticleTab, Tab } from '$lib/types';
   import { getTagOr, next } from '$lib/utils';
   import { subscribeAllOutbox } from '$lib/outbox';
   import ArticleListItem from '$components/ArticleListItem.svelte';
   import RelayItem from '$components/RelayItem.svelte';
   import type { AbstractRelay } from 'nostr-tools';
+  import { DEFAULT_WIKI_RELAYS } from '$lib/defaults';
 
   export let createChild: (tab: Tab) => void;
-  const seenCache: { [id: string]: string[] } = {};
+  let seenCache: { [id: string]: string[] } = {};
 
   let results: Event[] = [];
   const feeds = [normalFeed, followsFeed];
@@ -29,6 +38,7 @@
       return wotB / wotAvg + b.created_at / tsAvg - (wotA / wotAvg + a.created_at / tsAvg);
     });
     results = results;
+    seenCache = seenCache;
   }, 500);
 
   let close = () => {};
@@ -57,25 +67,33 @@
     close = feeds[current]();
   }
 
-  setTimeout(restart, 100);
+  setTimeout(restart, 400);
 
   function normalFeed() {
-    let sub = _pool.subscribeMany(
-      $userWikiRelays,
-      [
-        {
-          kinds: [wikiKind],
-          limit: 15
-        }
-      ],
-      {
-        id: 'recent',
-        onevent,
-        receivedEvent
-      }
-    );
+    let sub: SubCloser | undefined;
+    let cancel = account.subscribe(async (account) => {
+      if (sub) sub.close();
 
-    return sub.close;
+      sub = _pool.subscribeMany(
+        account ? await getBasicUserWikiRelays(account.pubkey) : DEFAULT_WIKI_RELAYS,
+        [
+          {
+            kinds: [wikiKind],
+            limit: 15
+          }
+        ],
+        {
+          id: 'recent',
+          onevent,
+          receivedEvent
+        }
+      );
+    });
+
+    return () => {
+      if (sub) sub.close();
+      cancel();
+    };
   }
 
   function followsFeed() {

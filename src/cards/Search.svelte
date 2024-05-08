@@ -53,6 +53,7 @@
           return ($wot[b.pubkey] || 0) - ($wot[a.pubkey] || 0);
         }
       });
+      seenCache = seenCache;
     }, 500);
 
     const relaysFromPreferredAuthors = unique(
@@ -76,7 +77,7 @@
           if (searchTab.preferredAuthors.includes(evt.pubkey)) {
             // we found an exact match that fits the list of preferred authors
             // jump straight into it
-            openArticle(evt);
+            openArticle(evt, undefined, true);
           }
 
           results.push(evt);
@@ -100,7 +101,7 @@
 
   const debouncedPerformSearch = debounce(performSearch, 400);
 
-  function openArticle(result: Event, ev?: MouseEvent) {
+  function openArticle(result: Event, ev?: MouseEvent, direct?: boolean) {
     let articleTab: ArticleTab = {
       id: next(),
       type: 'article',
@@ -109,7 +110,10 @@
       actualEvent: result
     };
     if (ev?.button === 1) createChild(articleTab);
-    else replaceSelf({ ...articleTab, back: tab });
+    else if (direct)
+      // if this is called with 'direct' we won't give it a back button
+      replaceSelf(articleTab);
+    else replaceSelf({ ...articleTab, back: tab }); // otherwise we will
   }
 
   function startEditing() {

@@ -51,3 +51,36 @@ export function subscribeAllOutbox(
     }
   };
 }
+
+export function subscribeOutbox(
+  pubkey: string,
+  baseFilter: Omit<Filter, 'authors'> & { limit: number },
+  params: SubscribeManyParams
+): SubCloser {
+  let closed = false;
+  let subc: SubCloser;
+
+  const filter = baseFilter as Filter;
+  filter.authors = [pubkey];
+
+  loadRelayList(pubkey).then((relayItems) => {
+    if (closed) return;
+
+    const relays = relayItems.filter((ri) => ri.write).map((ri) => ri.url);
+    const actualRelays = relays.slice(0, Math.min(relays.length, 4));
+
+    subc = _pool.subscribeMany(actualRelays, [filter], { id: 'singleoutbox', ...params });
+    if (closed) {
+      subc.close();
+    }
+  });
+
+  return {
+    close() {
+      if (subc) {
+        subc.close();
+      }
+      closed = true;
+    }
+  };
+}

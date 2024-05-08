@@ -87,9 +87,7 @@
         {
           id: 'article',
           receivedEvent(relay, _id) {
-            if (seenOn.indexOf(relay.url) === -1) {
-              seenOn.push(relay.url);
-            }
+            if (seenOn.indexOf(relay.url) === -1) seenOn.push(relay.url);
           },
           onevent(evt) {
             if (!event || event.created_at < evt.created_at) {
@@ -134,7 +132,7 @@
     //cancelers.push(
     //  cachingSub(
     //    `reaction-${eventId.slice(-8)}`,
-    //    [...$userPreferredRelays.read, ...safeRelays],
+    //    unique($userPreferredRelays.read, safeRelays),
     //    { authors: [$account.pubkey], ['#a']: [getA(event)] },
     //    (result) => {
     //      canLike = false;
@@ -225,7 +223,7 @@
       <div class="ml-2 mb-4">
         <div class="mt-2 font-bold text-4xl">{title || dTag}</div>
         <div>
-          by <UserLabel pubkey={event.pubkey} />
+          by <UserLabel pubkey={event.pubkey} {createChild} />
           {#if event.created_at}
             {formatDate(event.created_at)}
           {/if}

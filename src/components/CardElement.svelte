@@ -10,6 +10,8 @@
   import Settings from '$cards/Settings.svelte';
   import Relay from '$cards/Relay.svelte';
   import New from '$cards/New.svelte';
+  import User from '$cards/User.svelte';
+  import { npubEncode } from 'nostr-tools/nip19';
 
   export let tab: Tab;
 
@@ -26,29 +28,16 @@
     const index = $tabs.findIndex((item) => item.id === tab.id);
     const newTabs = [...$tabs];
     newTabs.splice(index, 1);
-    goto(
-      '/' +
-        newTabs
-          .map((tab) => toURL(tab))
-          .slice(1)
-          .join('/')
-    );
+    goto('/' + newTabs.map((tab) => toURL(tab)).join('/'));
   }
 
   function createChild(newChild: Tab) {
     newChild.parent = tab;
     const index = $tabs.findIndex((item) => item.id === tab.id);
     const newTabs = $tabs.slice(0, index + 1).concat(newChild);
-    goto(
-      '/' +
-        newTabs
-          .map((tab) => toURL(tab))
-          .slice(1)
-          .join('/'),
-      {
-        state: [index + 1, newChild]
-      }
-    );
+    goto('/' + newTabs.map((tab) => toURL(tab)).join('/'), {
+      state: [index + 1, newChild]
+    });
 
     setTimeout(() => {
       if (!isElementInViewport(String(newChild.id))) {
@@ -113,6 +102,8 @@
         return tab.data.join('*');
       case 'relay':
         return encodeURIComponent(urlWithoutScheme(tab.data));
+      case 'user':
+        return npubEncode(tab.data);
       case 'editor':
         return 'edit:' + (tab as EditorTab).data.title;
     }
@@ -176,6 +167,8 @@
       <Welcome {createChild} />
     {:else if tab.type === 'relay'}
       <Relay {createChild} {replaceSelf} {tab} />
+    {:else if tab.type === 'user'}
+      <User {createChild} {replaceSelf} {tab} />
     {:else if tab.type === 'settings'}
       <Settings />
     {:else if tab.type === 'editor'}

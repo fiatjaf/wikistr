@@ -1,4 +1,4 @@
-import { readable } from 'svelte/store';
+import { derived, readable } from 'svelte/store';
 import * as idbkv from 'idb-keyval';
 import type { EventTemplate, Event } from 'nostr-tools/pure';
 import { SimplePool } from 'nostr-tools/pool';
@@ -28,25 +28,6 @@ export const signer = {
     return se;
   }
 };
-
-let setUserWikiRelays: (_: string) => Promise<void>;
-export const userWikiRelays = readable<string[]>(DEFAULT_WIKI_RELAYS, (set) => {
-  setUserWikiRelays = async (pubkey: string) => {
-    const [rl1, rl2] = await Promise.all([
-      loadWikiRelaysList(pubkey),
-      Promise.all((await loadWikiAuthors(pubkey)).map(loadRelayList)).then((rll) =>
-        rll
-          .flat()
-          .filter((ri) => ri.write)
-          .map((ri) => ri.url)
-      )
-    ]);
-
-    if (rl1.length + rl2.length > 0) {
-      set(unique([...rl1, ...rl2]));
-    }
-  };
-});
 
 let setWOT: (_: string) => Promise<void>;
 export const wot = readable<{ [pubkey: string]: number }>({}, (set) => {
@@ -103,7 +84,6 @@ export const account = readable<NostrUser | null>(null, (set) => {
 const unsub = account.subscribe((account) => {
   if (account) {
     setTimeout(() => {
-      setUserWikiRelays(account.pubkey);
       setWOT(account.pubkey);
       unsub();
     }, 300);
@@ -113,7 +93,14 @@ const unsub = account.subscribe((account) => {
 // ensure these subscriptions are always on
 account.subscribe(() => {});
 wot.subscribe(() => {});
-userWikiRelays.subscribe(() => {});
+
+export const userWikiRelays = derived(
+  account,
+  (account, set) => {
+    account ? getBasicUserWikiRelays(account.pubkey).then(set) : set(DEFAULT_WIKI_RELAYS);
+  },
+  DEFAULT_WIKI_RELAYS
+);
 
 export async function broadcast(
   unsignedEvent: EventTemplate,
@@ -146,4 +133,23 @@ export async function broadcast(
   );
 
   return { event, successes, failures, error };
+}
+
+export async function getBasicUserWikiRelays(pubkey: string) {
+  const [rl1, rl2] = await Promise.all([
+    loadWikiRelaysList(pubkey),
+    Promise.all((await loadWikiAuthors(pubkey)).map(loadRelayList)).then((rll) =>
+      rll
+        .flat()
+        .filter((ri) => ri.write)
+        .map((ri) => ri.url)
+    )
+  ]);
+
+  let list = unique(rl1, rl2);
+  if (list.length < 2) {
+    list = unique(list, DEFAULT_WIKI_RELAYS);
+  }
+
+  return list;
 }
