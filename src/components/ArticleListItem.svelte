@@ -50,7 +50,7 @@
           192
         )}{#if String(event.tags.find((e) => e[0] == 'summary')?.[1])?.length > 192}...{/if}
     {:else}
-      {plainText <= 170 ? plainText : plainText.substring(0, 167) + '...'}
+      {plainText.length <= 170 ? plainText : plainText.substring(0, 167) + '...'}
     {/if}
   </p>
 </div>

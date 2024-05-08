@@ -2,16 +2,18 @@
   import { debounce } from 'debounce';
   import { onDestroy } from 'svelte';
   import type { SubCloser } from 'nostr-tools/abstract-pool';
-  import type { Event } from 'nostr-tools/pure';
+  import type { Event, NostrEvent } from 'nostr-tools/pure';
 
   import { signer, userWikiRelays, wikiKind, account, _pool, wot } from '$lib/nostr';
-  import type { Tab } from '$lib/types';
+  import type { ArticleTab, Tab } from '$lib/types';
   import { getTagOr, next } from '$lib/utils';
   import { subscribeAllOutbox } from '$lib/outbox';
   import ArticleListItem from '$components/ArticleListItem.svelte';
   import RelayItem from '$components/RelayItem.svelte';
+  import type { AbstractRelay } from 'nostr-tools';
 
   export let createChild: (tab: Tab) => void;
+  const seenCache: { [id: string]: string[] } = {};
 
   let results: Event[] = [];
   const feeds = [normalFeed, followsFeed];
@@ -40,7 +42,13 @@
   }
 
   function openArticle(result: Event) {
-    createChild({ id: next(), type: 'article', data: [getTagOr(result, 'd'), result.pubkey] });
+    createChild({
+      id: next(),
+      type: 'article',
+      data: [getTagOr(result, 'd'), result.pubkey],
+      actualEvent: result,
+      relayHints: seenCache[result.id] || []
+    } as ArticleTab);
   }
 
   function restart() {
@@ -62,10 +70,8 @@
       ],
       {
         id: 'recent',
-        onevent(evt) {
-          results.push(evt);
-          update();
-        }
+        onevent,
+        receivedEvent
       }
     );
 
@@ -85,10 +91,11 @@
         .filter(([_, v]) => v > 170)
         .map(([k]) => k);
 
-      subc = subscribeAllOutbox(eligibleKeys, (evt) => {
-        results.push(evt);
-        update();
-      });
+      subc = subscribeAllOutbox(
+        eligibleKeys,
+        { kinds: [wikiKind], limit: 20 },
+        { id: 'alloutbox', onevent, receivedEvent }
+      );
     });
 
     return () => {
@@ -96,6 +103,16 @@
       wotsubclose();
       subc?.close?.();
     };
+  }
+
+  function onevent(evt: NostrEvent) {
+    results.push(evt);
+    update();
+  }
+
+  function receivedEvent(relay: AbstractRelay, id: string) {
+    if (!(id in seenCache)) seenCache[id] = [];
+    if (seenCache[id].indexOf(relay.url) === -1) seenCache[id].push(relay.url);
   }
 </script>
 

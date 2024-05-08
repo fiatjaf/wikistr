@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { debounce } from 'debounce';
-  import type { Event } from 'nostr-tools';
+  import type { NostrEvent } from 'nostr-tools';
 
   import type { ArticleTab, Tab } from '$lib/types';
   import { getTagOr, next, urlWithoutScheme } from '$lib/utils';
@@ -11,7 +11,7 @@
   export let tab: Tab;
   export let replaceSelf: (tab: Tab) => void;
   export let createChild: (tab: Tab) => void;
-  let results: Event[] = [];
+  let results: NostrEvent[] = [];
   let tried = false;
 
   onMount(() => {
@@ -46,12 +46,13 @@
     return sub.close;
   });
 
-  function openArticle(result: Event, ev: MouseEvent) {
+  function openArticle(result: NostrEvent, ev: MouseEvent) {
     let articleTab: ArticleTab = {
       id: next(),
       type: 'article',
       data: [getTagOr(result, 'd'), result.pubkey],
-      relayHints: [tab.data]
+      relayHints: [tab.data],
+      actualEvent: result
     };
     if (ev.button === 1) createChild(articleTab);
     else replaceSelf(articleTab);

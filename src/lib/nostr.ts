@@ -4,7 +4,7 @@ import type { EventTemplate, Event } from 'nostr-tools/pure';
 import { SimplePool } from 'nostr-tools/pool';
 import { loadNostrUser, type NostrUser } from './metadata';
 import { DEFAULT_WIKI_RELAYS } from './defaults';
-import { loadContactList, loadWikiAuthors, loadWikiRelaysList } from './lists';
+import { loadContactList, loadRelayList, loadWikiAuthors, loadWikiRelaysList } from './lists';
 import { unique } from './utils';
 
 const startTime = Math.round(Date.now() / 1000);
@@ -32,9 +32,18 @@ export const signer = {
 let setUserWikiRelays: (_: string) => Promise<void>;
 export const userWikiRelays = readable<string[]>(DEFAULT_WIKI_RELAYS, (set) => {
   setUserWikiRelays = async (pubkey: string) => {
-    const rl = unique(await loadWikiRelaysList(pubkey));
-    if (rl.length > 0) {
-      set(rl);
+    const [rl1, rl2] = await Promise.all([
+      loadWikiRelaysList(pubkey),
+      Promise.all((await loadWikiAuthors(pubkey)).map(loadRelayList)).then((rll) =>
+        rll
+          .flat()
+          .filter((ri) => ri.write)
+          .map((ri) => ri.url)
+      )
+    ]);
+
+    if (rl1.length + rl2.length > 0) {
+      set(unique([...rl1, ...rl2]));
     }
   };
 });

@@ -22,7 +22,7 @@
 
     let prevP: string[] = [];
     return page.subscribe((v) => {
-      let nextP = v.params.path.split('/');
+      let nextP = v.params.path.split('/').filter((str) => str !== '');
 
       let nextTabs: Tab[] = [];
       for (let n = 0; n < nextP.length; n++) {

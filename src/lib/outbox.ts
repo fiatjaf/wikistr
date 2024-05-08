@@ -1,11 +1,12 @@
-import type { Filter, NostrEvent, SubCloser } from 'nostr-tools';
+import type { Filter, SubCloser, SubscribeManyParams } from 'nostr-tools';
 import { loadRelayList } from './lists';
-import { _pool, wikiKind } from './nostr';
+import { _pool } from './nostr';
 import { normalizeURL } from 'nostr-tools/utils';
 
 export function subscribeAllOutbox(
   pubkeys: string[],
-  onevent: (evt: NostrEvent) => void
+  baseFilter: Omit<Filter, 'authors'> & { limit: number },
+  params: SubscribeManyParams
 ): SubCloser {
   let closed = false;
   let subc: SubCloser;
@@ -25,17 +26,17 @@ export function subscribeAllOutbox(
             const url = normalizeURL(relay.url);
 
             if (!(url in requests)) {
-              requests[url] = [{ authors: [], kinds: [wikiKind], limit: 20 }];
+              requests[url] = [{ authors: [], ...baseFilter }];
             }
             requests[url][0].authors?.push(pubkey);
-            requests[url][0].limit = Math.round((requests[url][0].limit || 20) * 1.4);
+            requests[url][0].limit = Math.round(requests[url][0].limit! * 1.4);
           }
         } catch (err) {
           /***/
         }
       }
     }
-    subc = _pool.subscribeManyMap(requests, { id: 'alloutbox', onevent });
+    subc = _pool.subscribeManyMap(requests, { id: 'alloutbox', ...params });
     if (closed) {
       subc.close();
     }

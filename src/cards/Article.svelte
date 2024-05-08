@@ -65,7 +65,7 @@
   onMount(() => {
     if (articleTab.actualEvent) {
       event = articleTab.actualEvent;
-      seenOn = articleTab.relayHints;
+      seenOn = articleTab.relayHints || [];
       return;
     }
 
