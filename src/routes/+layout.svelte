@@ -25,22 +25,16 @@
     function onMouseDown(ev: MouseEvent) {
       if (!slider) return;
 
-      let proceed = false;
       let path = ev.composedPath();
-      for (let i = 0; i < path.length; i++) {
-        if (path[i] === slider) {
-          proceed = true;
-          break;
-        }
+      if (path[0] !== slider) {
+        return;
       }
-      if (!proceed) return;
 
       if (ev.target instanceof HTMLElement) {
         let card = getParentCard(ev.target);
         if (card && isElementInViewport(card)) return;
       }
 
-      ev.preventDefault();
       dragging = true;
       startX = ev.clientX - slider.offsetLeft;
       scrollLeft = slider.scrollLeft;
@@ -56,9 +50,9 @@
     }
 
     function onMouseMove(ev: MouseEvent) {
-      ev.preventDefault();
       if (!slider) return;
       if (!dragging) return;
+      ev.preventDefault();
       slider.scrollLeft = scrollLeft + startX - ev.clientX;
     }
   });
