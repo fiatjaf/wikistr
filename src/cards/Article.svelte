@@ -111,6 +111,17 @@
     return account.subscribe(onArticle);
   });
 
+  onMount(() => {
+    // help nostr stay by publishing articles from others into their write relays
+    setTimeout(async () => {
+      if (event)
+        broadcast(
+          event,
+          (await loadRelayList(event.pubkey)).filter((ri) => ri.write).map((ri) => ri.url)
+        );
+    }, 5000);
+  });
+
   let cancelers: Array<() => void> = [];
   onMount(() => {
     return () => {
