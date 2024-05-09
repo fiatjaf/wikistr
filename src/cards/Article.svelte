@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import type { Event, EventTemplate } from 'nostr-tools';
 
   import { account, reactionKind, broadcast, _pool, wikiKind } from '$lib/nostr';
@@ -17,6 +17,7 @@
   export let createChild: (card: Card) => void;
   export let replaceSelf: (card: Card) => void;
   let event: Event | null = null;
+  let nOthers: number | undefined = undefined;
   let copied = false;
   let likeStatus: 'liked' | 'disliked' | unknown;
   let canLike: boolean | undefined;
@@ -63,6 +64,7 @@
   }
 
   onMount(() => {
+    // load this article
     if (articleCard.actualEvent) {
       event = articleCard.actualEvent;
       seenOn = articleCard.relayHints || [];
@@ -95,7 +97,7 @@
           onevent(evt) {
             if (!event || event.created_at < evt.created_at) {
               event = evt;
-              onArticle();
+              setupLikes();
             }
           }
         }
@@ -108,7 +110,8 @@
   });
 
   onMount(() => {
-    return account.subscribe(onArticle);
+    // redraw likes thing when we have a logged in user
+    return account.subscribe(setupLikes);
   });
 
   onMount(() => {
@@ -122,14 +125,20 @@
     }, 5000);
   });
 
-  let cancelers: Array<() => void> = [];
   onMount(() => {
-    return () => {
-      cancelers.forEach((fn) => fn());
-    };
+    // preemptively load other versions if necessary
+    if (articleCard.versions) {
+      nOthers = articleCard.versions.length;
+      return;
+    }
   });
 
-  function onArticle() {
+  let cancelers: Array<() => void> = [];
+  onDestroy(() => {
+    cancelers.forEach((fn) => fn());
+  });
+
+  function setupLikes() {
     if (!event) return;
     if (!$account) return;
 
@@ -256,7 +265,9 @@
             {#if copied}Copied!{:else}Share{/if}
           </a>
           &nbsp;• &nbsp;
-          <a class="cursor-pointer underline" on:mouseup|preventDefault={seeOthers}>Versions</a>
+          <a class="cursor-pointer underline" on:mouseup|preventDefault={seeOthers}
+            >{nOthers} Versions</a
+          >
         </div>
       </div>
     </div>

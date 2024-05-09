@@ -7,7 +7,15 @@ export type EditorData = {
   previous: ArticleCard | undefined;
 };
 
-export type CardType = 'welcome' | 'find' | 'article' | 'relay' | 'user' | 'settings' | 'editor' | 'new';
+export type CardType =
+  | 'welcome'
+  | 'find'
+  | 'article'
+  | 'relay'
+  | 'user'
+  | 'settings'
+  | 'editor'
+  | 'new';
 
 export interface Card {
   id: number;
@@ -42,6 +50,7 @@ export type ArticleCard = {
   data: [string, string]; // d-tag * pubkey
   relayHints: string[];
   actualEvent?: NostrEvent; // for when we already have it we can skip relays
+  versions?: NostrEvent[];
 };
 
 export type RelayCard = {

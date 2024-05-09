@@ -50,10 +50,17 @@
 
     const update = debounce(() => {
       // sort by exact matches first, then by wotness
+      let normalizedIdentifier = normalizeArticleName(query);
       results = results.sort((a, b) => {
-        if (getTagOr(a, 'd') === query && getTagOr(b, 'd') !== query) {
+        if (
+          getTagOr(a, 'd') === normalizedIdentifier &&
+          getTagOr(b, 'd') !== normalizedIdentifier
+        ) {
           return -1;
-        } else if (getTagOr(b, 'd') === query && getTagOr(a, 'd') !== query) {
+        } else if (
+          getTagOr(b, 'd') === normalizedIdentifier &&
+          getTagOr(a, 'd') !== normalizedIdentifier
+        ) {
           return 1;
         } else {
           return ($wot[b.pubkey] || 0) - ($wot[a.pubkey] || 0);
@@ -111,7 +118,8 @@
       type: 'article',
       data: [getTagOr(result, 'd'), result.pubkey],
       relayHints: seenCache[result.id],
-      actualEvent: result
+      actualEvent: result,
+      versions: results.filter((evt) => getTagOr(evt, 'd') === normalizeArticleName(query))
     };
     if (ev?.button === 1) createChild(articleCard);
     else if (direct)
