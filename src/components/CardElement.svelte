@@ -168,7 +168,7 @@
     {:else if tab.type === 'relay'}
       <Relay {createChild} {replaceSelf} {tab} />
     {:else if tab.type === 'user'}
-      <User {createChild} {replaceSelf} {tab} />
+      <User {createChild} {tab} />
     {:else if tab.type === 'settings'}
       <Settings />
     {:else if tab.type === 'editor'}

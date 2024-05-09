@@ -11,7 +11,6 @@
   import { subscribeOutbox } from '$lib/outbox';
 
   export let tab: Tab;
-  export let replaceSelf: (tab: Tab) => void;
   export let createChild: (tab: Tab) => void;
   let seenCache: { [id: string]: string[] } = {};
   let results: NostrEvent[] = [];
@@ -47,7 +46,7 @@
     return sub.close;
   });
 
-  function openArticle(result: NostrEvent, ev?: MouseEvent) {
+  function openArticle(result: NostrEvent) {
     let articleTab: ArticleTab = {
       id: next(),
       type: 'article',
@@ -55,8 +54,7 @@
       relayHints: seenCache[result.id] || [],
       actualEvent: result
     };
-    if (ev?.button === 1) createChild(articleTab);
-    else replaceSelf(articleTab);
+    createChild(articleTab);
   }
 </script>
 
