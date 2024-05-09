@@ -158,7 +158,7 @@
   {/if}
   <article class="font-sans mx-auto p-2 lg:max-w-4xl">
     {#if card.type === 'article'}
-      <Article {createChild} {replaceSelf} article={card.data} {card} />
+      <Article {createChild} {replaceSelf} {back} {card} />
     {:else if card.type === 'new'}
       <New {replaceNewCard} />
     {:else if card.type === 'find'}

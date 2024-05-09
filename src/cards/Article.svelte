@@ -3,7 +3,7 @@
   import type { Event, EventTemplate } from 'nostr-tools';
 
   import { account, reactionKind, broadcast, _pool, wikiKind } from '$lib/nostr';
-  import { formatDate, getA, next } from '$lib/utils';
+  import { formatDate, getA, getTagOr, next, normalizeArticleName } from '$lib/utils';
   import type { ArticleCard, SearchCard, Card } from '$lib/types';
   import { page } from '$app/stores';
   import UserLabel from '$components/UserLabel.svelte';
@@ -12,21 +12,22 @@
   import { loadNostrUser, bareNostrUser, type NostrUser } from '$lib/metadata';
   import RelayItem from '$components/RelayItem.svelte';
 
-  export let article: [string, string];
   export let card: Card;
   export let createChild: (card: Card) => void;
   export let replaceSelf: (card: Card) => void;
+  export let back: () => void;
   let event: Event | null = null;
   let nOthers: number | undefined = undefined;
   let copied = false;
   let likeStatus: 'liked' | 'disliked' | unknown;
   let canLike: boolean | undefined;
-  const dTag = article[0];
-  const pubkey = article[1];
-  let author: NostrUser = bareNostrUser(pubkey);
   let seenOn: string[] = [];
 
   const articleCard = card as ArticleCard;
+  const dTag = articleCard.data[0];
+  const pubkey = articleCard.data[1];
+
+  let author: NostrUser = bareNostrUser(pubkey);
 
   $: title = event?.tags.find(([k]) => k === 'title')?.[1] || dTag;
   $: summary = event?.tags.find(([k]) => k === 'summary')?.[1];
@@ -53,6 +54,16 @@
   }
 
   function seeOthers(ev: MouseEvent) {
+    if (
+      articleCard.back &&
+      event &&
+      normalizeArticleName(articleCard.back.data) === getTagOr(event, 'd')
+    ) {
+      // just go back
+      back();
+      return;
+    }
+
     let nextCard: SearchCard = {
       id: next(),
       type: 'find',
