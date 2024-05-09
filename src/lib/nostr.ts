@@ -102,31 +102,6 @@ export const userWikiRelays = derived(
   DEFAULT_WIKI_RELAYS
 );
 
-export async function broadcast(
-  unsignedEvent: EventTemplate,
-  relays: string[],
-  purpose: string
-): Promise<void> {
-  let event: Event;
-  try {
-    event = await signer.signEvent(unsignedEvent);
-  } catch (err) {
-    console.warn(`failed to publish (${purpose})`, err);
-    return;
-  }
-
-  await Promise.all(
-    relays.map(async (url) => {
-      try {
-        const r = await _pool.ensureRelay(url);
-        await r.publish(event);
-      } catch (err) {
-        console.warn('failed to publish', event, `to (${purpose})`, url, err);
-      }
-    })
-  );
-}
-
 export async function getBasicUserWikiRelays(pubkey: string) {
   const [rl1, rl2] = await Promise.all([
     loadWikiRelaysList(pubkey),

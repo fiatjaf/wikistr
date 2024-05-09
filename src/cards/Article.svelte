@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
-  import type { Event, EventTemplate } from 'nostr-tools';
+  import type { Event, EventTemplate, NostrEvent } from 'nostr-tools';
 
-  import { account, reactionKind, broadcast, _pool, wikiKind } from '$lib/nostr';
+  import { account, reactionKind, _pool, wikiKind, signer } from '$lib/nostr';
   import { formatDate, getA, getTagOr, next, normalizeArticleName } from '$lib/utils';
   import type { ArticleCard, SearchCard, Card } from '$lib/types';
   import { page } from '$app/stores';
@@ -205,16 +205,25 @@
       created_at: Math.round(Date.now() / 1000)
     };
 
-    let relays = await loadRelayList(pubkey);
-    broadcast(
-      eventTemplate,
-      [
-        ...(card as ArticleCard).relayHints,
-        ...relays.filter((ri) => ri.read).map((ri) => ri.url),
-        ...seenOn
-      ],
-      'like'
-    );
+    let inboxRelays = (await loadRelayList(pubkey)).filter((ri) => ri.read).map((ri) => ri.url);
+    let relays = [...(card as ArticleCard).relayHints, ...inboxRelays, ...seenOn];
+
+    let like: NostrEvent;
+    try {
+      like = await signer.signEvent(eventTemplate);
+    } catch (err) {
+      console.warn('failed to publish like', err);
+      return;
+    }
+
+    relays.forEach(async (url) => {
+      try {
+        const r = await _pool.ensureRelay(url);
+        await r.publish(like);
+      } catch (err) {
+        console.warn('failed to publish like', event, 'to', url, err);
+      }
+    });
   }
 </script>
 
