@@ -4,7 +4,7 @@
   import type { Event, SubCloser } from 'nostr-tools';
 
   import { _pool, wot, wikiKind, userWikiRelays } from '$lib/nostr';
-  import type { ArticleTab, SearchTab, Tab } from '$lib/types';
+  import type { ArticleCard, SearchCard, Card } from '$lib/types';
   import {
     addUniqueTaggedReplaceable,
     getTagOr,
@@ -17,19 +17,19 @@
   import { loadRelayList } from '$lib/lists';
   import { replaceState } from '$app/navigation';
   import { page } from '$app/stores';
-  import { tabs } from '$lib/state';
+  import { cards } from '$lib/state';
 
-  export let tab: Tab;
-  export let replaceSelf: (tab: Tab) => void;
-  export let createChild: (tab: Tab) => void;
+  export let card: Card;
+  export let replaceSelf: (card: Card) => void;
+  export let createChild: (card: Card) => void;
   let seenCache: { [id: string]: string[] } = {};
   let results: Event[] = [];
   let tried = false;
 
-  const searchTab = tab as SearchTab;
+  const searchCard = card as SearchCard;
 
   let editable = false;
-  let query = searchTab.data;
+  let query = searchCard.data;
 
   // close handlers
   let search: SubCloser;
@@ -63,7 +63,7 @@
     }, 500);
 
     const relaysFromPreferredAuthors = unique(
-      (await Promise.all((searchTab.preferredAuthors || []).map(loadRelayList)))
+      (await Promise.all((searchCard.preferredAuthors || []).map(loadRelayList)))
         .flat()
         .filter((ri) => ri.write)
         .map((ri) => ri.url)
@@ -80,7 +80,7 @@
         onevent(evt) {
           tried = true;
 
-          if (searchTab.preferredAuthors.includes(evt.pubkey)) {
+          if (searchCard.preferredAuthors.includes(evt.pubkey)) {
             // we found an exact match that fits the list of preferred authors
             // jump straight into it
             openArticle(evt, undefined, true);
@@ -106,18 +106,18 @@
   const debouncedPerformSearch = debounce(performSearch, 400);
 
   function openArticle(result: Event, ev?: MouseEvent, direct?: boolean) {
-    let articleTab: ArticleTab = {
+    let articleCard: ArticleCard = {
       id: next(),
       type: 'article',
       data: [getTagOr(result, 'd'), result.pubkey],
       relayHints: seenCache[result.id],
       actualEvent: result
     };
-    if (ev?.button === 1) createChild(articleTab);
+    if (ev?.button === 1) createChild(articleCard);
     else if (direct)
       // if this is called with 'direct' we won't give it a back button
-      replaceSelf(articleTab);
-    else replaceSelf({ ...articleTab, back: tab }); // otherwise we will
+      replaceSelf(articleCard);
+    else replaceSelf({ ...articleCard, back: card }); // otherwise we will
   }
 
   function startEditing() {
@@ -138,13 +138,13 @@
 
     editable = false;
     query = query.replace(/[\r\n]/g, '').replace(/[^\w .:-]/g, '-');
-    if (query !== searchTab.data) {
+    if (query !== searchCard.data) {
       // replace browser url and history
-      let index = $tabs.findIndex((t) => t.id === tab.id);
+      let index = $cards.findIndex((t) => t.id === card.id);
       let replacementURL = $page.url.pathname.split('/').slice(1);
       replacementURL[index] = query;
 
-      let currentState = $page.state as [number, Tab];
+      let currentState = $page.state as [number, Card];
       replaceState('/' + replacementURL.join('/'), currentState[0] === index ? [] : currentState);
 
       // redo the query
@@ -173,7 +173,7 @@
     </p>
     <button
       on:click={() => {
-        replaceSelf({ id: next(), type: 'editor', data: { title: query, previous: tab } });
+        replaceSelf({ id: next(), type: 'editor', data: { title: query, previous: card } });
       }}
       class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
     >

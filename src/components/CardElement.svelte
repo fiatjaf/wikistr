@@ -1,8 +1,8 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { tabs } from '$lib/state';
-  import type { EditorTab, Tab } from '$lib/types';
-  import { scrollTabIntoView, isElementInViewport, hashbow, urlWithoutScheme } from '$lib/utils';
+  import { cards } from '$lib/state';
+  import type { EditorCard, Card } from '$lib/types';
+  import { scrollCardIntoView, isElementInViewport, hashbow, urlWithoutScheme } from '$lib/utils';
   import Article from '$cards/Article.svelte';
   import Editor from '$cards/Editor.svelte';
   import Welcome from '$cards/Welcome.svelte';
@@ -13,99 +13,99 @@
   import User from '$cards/User.svelte';
   import { npubEncode } from 'nostr-tools/nip19';
 
-  export let tab: Tab;
+  export let card: Card;
 
   function close() {
-    if (tab.type === 'editor' && tab.data.previous) replaceSelf(tab.data.previous);
+    if (card.type === 'editor' && card.data.previous) replaceSelf(card.data.previous);
     else removeSelf();
   }
 
   function back() {
-    if (tab.back) replaceSelf(tab.back);
+    if (card.back) replaceSelf(card.back);
   }
 
   function removeSelf() {
-    const index = $tabs.findIndex((item) => item.id === tab.id);
-    const newTabs = [...$tabs];
-    newTabs.splice(index, 1);
-    goto('/' + newTabs.map((tab) => toURL(tab)).join('/'));
+    const index = $cards.findIndex((item) => item.id === card.id);
+    const newCards = [...$cards];
+    newCards.splice(index, 1);
+    goto('/' + newCards.map((card) => toURL(card)).join('/'));
   }
 
-  function createChild(newChild: Tab) {
-    newChild.parent = tab;
-    const index = $tabs.findIndex((item) => item.id === tab.id);
-    const newTabs = $tabs.slice(0, index + 1).concat(newChild);
-    goto('/' + newTabs.map((tab) => toURL(tab)).join('/'), {
+  function createChild(newChild: Card) {
+    newChild.parent = card;
+    const index = $cards.findIndex((item) => item.id === card.id);
+    const newCards = $cards.slice(0, index + 1).concat(newChild);
+    goto('/' + newCards.map((card) => toURL(card)).join('/'), {
       state: [index + 1, newChild]
     });
 
     setTimeout(() => {
       if (!isElementInViewport(String(newChild.id))) {
-        scrollTabIntoView(String(newChild.id), false);
+        scrollCardIntoView(String(newChild.id), false);
       }
     }, 1);
   }
 
-  function replaceSelf(updatedTab: Tab) {
-    updatedTab.parent = tab.parent;
-    const index = $tabs.findIndex((item) => item.id === tab.id);
-    const newTabs = $tabs.slice();
-    const removedChildren = newTabs.filter((item) => item.parent === tab);
+  function replaceSelf(updatedCard: Card) {
+    updatedCard.parent = card.parent;
+    const index = $cards.findIndex((item) => item.id === card.id);
+    const newCards = $cards.slice();
+    const removedChildren = newCards.filter((item) => item.parent === card);
     removedChildren.forEach((child) => {
-      const childIndex = newTabs.indexOf(child);
+      const childIndex = newCards.indexOf(child);
       if (childIndex !== -1) {
-        newTabs.splice(childIndex, 1);
+        newCards.splice(childIndex, 1);
       }
     });
-    newTabs[index] = updatedTab;
+    newCards[index] = updatedCard;
     goto(
       '/' +
-        newTabs
-          .map((tab) => toURL(tab))
+        newCards
+          .map((card) => toURL(card))
           .filter((v) => v)
           .join('/'),
       {
-        state: [index, updatedTab]
+        state: [index, updatedCard]
       }
     );
   }
 
-  function replaceNewTab(newTab: Tab) {
-    const newTabs = $tabs.concat(newTab);
+  function replaceNewCard(newCard: Card) {
+    const newCards = $cards.concat(newCard);
     goto(
       '/' +
-        newTabs
-          .map((tab) => toURL(tab))
+        newCards
+          .map((card) => toURL(card))
           .filter((v) => v)
           .join('/'),
       {
-        state: [$tabs.length, newTab]
+        state: [$cards.length, newCard]
       }
     );
 
     setTimeout(() => {
-      if (!isElementInViewport(String(newTab.id))) {
-        scrollTabIntoView(String(newTab.id), false);
+      if (!isElementInViewport(String(newCard.id))) {
+        scrollCardIntoView(String(newCard.id), false);
       }
     }, 1);
   }
 
   function scrollIntoViewIfNecessary(ev: MouseEvent & { currentTarget: HTMLElement }) {
-    if (!isElementInViewport(ev.currentTarget)) scrollTabIntoView(ev.currentTarget, false);
+    if (!isElementInViewport(ev.currentTarget)) scrollCardIntoView(ev.currentTarget, false);
   }
 
-  function toURL(tab: Tab): string | null {
-    switch (tab.type) {
+  function toURL(card: Card): string | null {
+    switch (card.type) {
       case 'find':
-        return tab.data;
+        return card.data;
       case 'article':
-        return tab.data.join('*');
+        return card.data.join('*');
       case 'relay':
-        return encodeURIComponent(urlWithoutScheme(tab.data));
+        return encodeURIComponent(urlWithoutScheme(card.data));
       case 'user':
-        return npubEncode(tab.data);
+        return npubEncode(card.data);
       case 'editor':
-        return 'edit:' + (tab as EditorTab).data.title;
+        return 'edit:' + (card as EditorCard).data.title;
     }
     return null;
   }
@@ -113,7 +113,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
 <div
-  id={`wikitab-${tab.id}`}
+  id={`wikicard-${card.id}`}
   class="
   overflow-y-auto
   overflow-x-hidden
@@ -123,15 +123,15 @@
   h-[calc(100vh_-_32px)]
   p-4"
   on:dblclick={scrollIntoViewIfNecessary}
-  style:background-color={tab.type === 'article'
-    ? hashbow(tab.data[0], 94)
-    : tab.type === 'find'
-      ? hashbow(tab.data, 88)
+  style:background-color={card.type === 'article'
+    ? hashbow(card.data[0], 94)
+    : card.type === 'find'
+      ? hashbow(card.data, 88)
       : ''}
 >
-  {#if tab.type !== 'welcome' && tab.type !== 'new'}
-    <div class="flex" class:justify-between={tab.back} class:justify-end={!tab.back}>
-      {#if tab.back}
+  {#if card.type !== 'welcome' && card.type !== 'new'}
+    <div class="flex" class:justify-between={card.back} class:justify-end={!card.back}>
+      {#if card.back}
         <button on:click={back}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -157,22 +157,22 @@
     </div>
   {/if}
   <article class="font-sans mx-auto p-2 lg:max-w-4xl">
-    {#if tab.type === 'article'}
-      <Article {createChild} {replaceSelf} article={tab.data} {tab} />
-    {:else if tab.type === 'new'}
-      <New {replaceNewTab} />
-    {:else if tab.type === 'find'}
-      <Search {createChild} {replaceSelf} {tab} />
-    {:else if tab.type === 'welcome'}
+    {#if card.type === 'article'}
+      <Article {createChild} {replaceSelf} article={card.data} {card} />
+    {:else if card.type === 'new'}
+      <New {replaceNewCard} />
+    {:else if card.type === 'find'}
+      <Search {createChild} {replaceSelf} {card} />
+    {:else if card.type === 'welcome'}
       <Welcome {createChild} />
-    {:else if tab.type === 'relay'}
-      <Relay {createChild} {replaceSelf} {tab} />
-    {:else if tab.type === 'user'}
-      <User {createChild} {tab} />
-    {:else if tab.type === 'settings'}
+    {:else if card.type === 'relay'}
+      <Relay {createChild} {replaceSelf} {card} />
+    {:else if card.type === 'user'}
+      <User {createChild} {card} />
+    {:else if card.type === 'settings'}
       <Settings />
-    {:else if tab.type === 'editor'}
-      <Editor {replaceSelf} data={tab.data} />
+    {:else if card.type === 'editor'}
+      <Editor {replaceSelf} data={card.data} />
     {/if}
   </article>
 </div>

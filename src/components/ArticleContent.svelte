@@ -2,13 +2,13 @@
   import type { NostrEvent } from 'nostr-tools';
   import SvelteMarkdown from 'svelte-markdown';
   import WikilinkComponent from './WikilinkComponent.svelte';
-  import type { Tab } from '$lib/types';
+  import type { Card } from '$lib/types';
   import { normalizeArticleName } from '$lib/utils';
   import { onMount } from 'svelte';
   import { loadWikiAuthors } from '$lib/lists';
 
   export let event: NostrEvent;
-  export let createChild: (tab: Tab) => void;
+  export let createChild: (card: Card) => void;
 
   let authorPreferredWikiAuthors: string[] = [];
 

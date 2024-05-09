@@ -1,11 +1,11 @@
 <script lang="ts">
-  import type { SearchTab, Tab } from '$lib/types';
+  import type { SearchCard, Card } from '$lib/types';
   import { next } from '$lib/utils';
 
   export let href: string;
   export let title: string;
   export let text: string;
-  export let extra: { preferredAuthors: string[]; createChild: (tab: Tab) => void };
+  export let extra: { preferredAuthors: string[]; createChild: (card: Card) => void };
   const { preferredAuthors, createChild } = extra;
 
   let wikitarget: string;
@@ -14,7 +14,7 @@
   }
 
   function handleWikilinkClick() {
-    createChild({ id: next(), type: 'find', data: wikitarget, preferredAuthors } as SearchTab);
+    createChild({ id: next(), type: 'find', data: wikitarget, preferredAuthors } as SearchCard);
   }
 </script>
 

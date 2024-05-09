@@ -3,14 +3,14 @@
   import { debounce } from 'debounce';
   import type { NostrEvent } from 'nostr-tools';
 
-  import type { ArticleTab, Tab } from '$lib/types';
+  import type { ArticleCard, Card } from '$lib/types';
   import { addUniqueTaggedReplaceable, getTagOr, next, urlWithoutScheme } from '$lib/utils';
   import { _pool, wikiKind } from '$lib/nostr';
   import ArticleListItem from '$components/ArticleListItem.svelte';
 
-  export let tab: Tab;
-  export let replaceSelf: (tab: Tab) => void;
-  export let createChild: (tab: Tab) => void;
+  export let card: Card;
+  export let replaceSelf: (card: Card) => void;
+  export let createChild: (card: Card) => void;
   let results: NostrEvent[] = [];
   let tried = false;
 
@@ -24,7 +24,7 @@
     }, 1500);
 
     let sub = _pool.subscribeMany(
-      [tab.data],
+      [card.data],
       [
         {
           kinds: [wikiKind],
@@ -46,19 +46,19 @@
   });
 
   function openArticle(result: NostrEvent, ev: MouseEvent) {
-    let articleTab: ArticleTab = {
+    let articleCard: ArticleCard = {
       id: next(),
       type: 'article',
       data: [getTagOr(result, 'd'), result.pubkey],
-      relayHints: [tab.data],
+      relayHints: [card.data],
       actualEvent: result
     };
-    if (ev.button === 1) createChild(articleTab);
-    else replaceSelf(articleTab);
+    if (ev.button === 1) createChild(articleCard);
+    else replaceSelf(articleCard);
   }
 </script>
 
-<div class="mb-0 text-2xl break-all">{urlWithoutScheme(tab.data)}</div>
+<div class="mb-0 text-2xl break-all">{urlWithoutScheme(card.data)}</div>
 {#each results as result (result.id)}
   <ArticleListItem event={result} {openArticle} />
 {/each}

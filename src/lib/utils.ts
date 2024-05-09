@@ -47,10 +47,10 @@ export function next(): number {
   return serial++;
 }
 
-export function scrollTabIntoView(el: number | string | HTMLElement, wait: boolean) {
-  function scrollTab() {
+export function scrollCardIntoView(el: number | string | HTMLElement, wait: boolean) {
+  function scrollCard() {
     const element =
-      el instanceof HTMLElement ? el : document.querySelector(`[id^="wikitab-${el}"]`);
+      el instanceof HTMLElement ? el : document.querySelector(`[id^="wikicard-${el}"]`);
     if (!element) return;
 
     element.scrollIntoView({
@@ -61,15 +61,15 @@ export function scrollTabIntoView(el: number | string | HTMLElement, wait: boole
 
   if (wait) {
     setTimeout(() => {
-      scrollTab();
+      scrollCard();
     }, 1);
   } else {
-    scrollTab();
+    scrollCard();
   }
 }
 
 export function isElementInViewport(el: number | string | HTMLElement) {
-  const element = el instanceof HTMLElement ? el : document.querySelector(`[id^="wikitab-${el}"]`);
+  const element = el instanceof HTMLElement ? el : document.querySelector(`[id^="wikicard-${el}"]`);
   if (!element) return;
 
   const rect = element.getBoundingClientRect();
@@ -84,7 +84,7 @@ export function isElementInViewport(el: number | string | HTMLElement) {
 
 export function getParentCard(el: HTMLElement): HTMLElement | null {
   let curr: HTMLElement | null = el;
-  while (curr && !curr.id?.startsWith('wikitab')) {
+  while (curr && !curr.id?.startsWith('wikicard')) {
     curr = curr.parentElement;
   }
   return curr;

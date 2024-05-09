@@ -2,11 +2,11 @@
   import { DEFAULT_WIKI_RELAYS } from '$lib/defaults';
   import { loadRelayList } from '$lib/lists';
   import { wikiKind, account, signer, _pool } from '$lib/nostr';
-  import type { ArticleTab, EditorData, Tab } from '$lib/types.ts';
+  import type { ArticleCard, EditorData, Card } from '$lib/types.ts';
   import { getTagOr, next, normalizeArticleName, unique, urlWithoutScheme } from '$lib/utils';
   import type { EventTemplate } from 'nostr-tools';
 
-  export let replaceSelf: (tab: Tab) => void;
+  export let replaceSelf: (card: Card) => void;
   export let data: EditorData;
 
   let error: string | undefined;
@@ -58,7 +58,7 @@
             data: [getTagOr(event, 'd'), event.pubkey],
             actualEvent: event,
             relayHints: successes
-          } as ArticleTab);
+          } as ArticleCard);
         }, 1400);
       }
     } catch (err) {

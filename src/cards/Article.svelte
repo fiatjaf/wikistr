@@ -4,7 +4,7 @@
 
   import { account, reactionKind, broadcast, _pool, wikiKind } from '$lib/nostr';
   import { formatDate, getA, next } from '$lib/utils';
-  import type { ArticleTab, SearchTab, Tab } from '$lib/types';
+  import type { ArticleCard, SearchCard, Card } from '$lib/types';
   import { page } from '$app/stores';
   import UserLabel from '$components/UserLabel.svelte';
   import ArticleContent from '$components/ArticleContent.svelte';
@@ -13,9 +13,9 @@
   import RelayItem from '$components/RelayItem.svelte';
 
   export let article: [string, string];
-  export let tab: Tab;
-  export let createChild: (tab: Tab) => void;
-  export let replaceSelf: (tab: Tab) => void;
+  export let card: Card;
+  export let createChild: (card: Card) => void;
+  export let replaceSelf: (card: Card) => void;
   let event: Event | null = null;
   let copied = false;
   let likeStatus: 'liked' | 'disliked' | unknown;
@@ -25,7 +25,7 @@
   let author: NostrUser = bareNostrUser(pubkey);
   let seenOn: string[] = [];
 
-  const articleTab = tab as ArticleTab;
+  const articleCard = card as ArticleCard;
 
   $: title = event?.tags.find(([k]) => k === 'title')?.[1] || dTag;
   $: summary = event?.tags.find(([k]) => k === 'summary')?.[1];
@@ -38,7 +38,7 @@
         title,
         summary,
         content: event?.content,
-        previous: tab
+        previous: card
       }
     });
   }
@@ -52,20 +52,20 @@
   }
 
   function seeOthers(ev: MouseEvent) {
-    let nextTab: SearchTab = {
+    let nextCard: SearchCard = {
       id: next(),
       type: 'find',
       data: dTag,
       preferredAuthors: [] // leave empty so we ensure the list of alternatives will be shown
     };
-    if (ev.button === 1) createChild(nextTab);
-    else replaceSelf(nextTab);
+    if (ev.button === 1) createChild(nextCard);
+    else replaceSelf(nextCard);
   }
 
   onMount(() => {
-    if (articleTab.actualEvent) {
-      event = articleTab.actualEvent;
-      seenOn = articleTab.relayHints || [];
+    if (articleCard.actualEvent) {
+      event = articleCard.actualEvent;
+      seenOn = articleCard.relayHints || [];
       return;
     }
 
@@ -76,7 +76,7 @@
         relays
           .filter((ri) => ri.write)
           .map((ri) => ri.url)
-          .concat((tab as ArticleTab).relayHints),
+          .concat((card as ArticleCard).relayHints),
         [
           {
             authors: [pubkey],
@@ -180,7 +180,7 @@
 
     let relays = await loadRelayList(pubkey);
     broadcast(eventTemplate, [
-      ...(tab as ArticleTab).relayHints,
+      ...(card as ArticleCard).relayHints,
       ...relays.filter((ri) => ri.read).map((ri) => ri.url),
       ...seenOn
     ]);

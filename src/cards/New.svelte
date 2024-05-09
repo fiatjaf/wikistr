@@ -1,19 +1,19 @@
 <script lang="ts">
   import { next, normalizeArticleName } from '$lib/utils';
-  import type { SearchTab, Tab } from '$lib/types';
+  import type { SearchCard, Card } from '$lib/types';
 
-  export let replaceNewTab: (tab: Tab) => void;
+  export let replaceNewCard: (card: Card) => void;
   let query = '';
 
   function search() {
     if (query) {
-      const newTab: SearchTab = {
+      const newCard: SearchCard = {
         id: next(),
         type: 'find',
         data: normalizeArticleName(query),
         preferredAuthors: []
       };
-      replaceNewTab(newTab);
+      replaceNewCard(newCard);
       query = '';
     }
   }

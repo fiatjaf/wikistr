@@ -3,15 +3,15 @@
   import { debounce } from 'debounce';
   import type { NostrEvent } from 'nostr-tools';
 
-  import type { ArticleTab, Tab } from '$lib/types';
+  import type { ArticleCard, Card } from '$lib/types';
   import { addUniqueTaggedReplaceable, getTagOr, next } from '$lib/utils';
   import { _pool, wikiKind } from '$lib/nostr';
   import ArticleListItem from '$components/ArticleListItem.svelte';
   import UserLabel from '$components/UserLabel.svelte';
   import { subscribeOutbox } from '$lib/outbox';
 
-  export let tab: Tab;
-  export let createChild: (tab: Tab) => void;
+  export let card: Card;
+  export let createChild: (card: Card) => void;
   let seenCache: { [id: string]: string[] } = {};
   let results: NostrEvent[] = [];
   let tried = false;
@@ -27,7 +27,7 @@
     }, 1500);
 
     let sub = subscribeOutbox(
-      tab.data,
+      card.data,
       {
         kinds: [wikiKind],
         limit: 50
@@ -47,19 +47,19 @@
   });
 
   function openArticle(result: NostrEvent) {
-    let articleTab: ArticleTab = {
+    let articleCard: ArticleCard = {
       id: next(),
       type: 'article',
       data: [getTagOr(result, 'd'), result.pubkey],
       relayHints: seenCache[result.id] || [],
       actualEvent: result
     };
-    createChild(articleTab);
+    createChild(articleCard);
   }
 </script>
 
 <div class="mb-0 text-2xl break-all">
-  <UserLabel pubkey={tab.data} />
+  <UserLabel pubkey={card.data} />
 </div>
 {#each results as result (result.id)}
   <ArticleListItem event={result} {openArticle} />

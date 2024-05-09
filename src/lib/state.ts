@@ -1,5 +1,5 @@
 import { writable, type Writable } from 'svelte/store';
 
-import type { Tab } from './types';
+import type { Card } from './types';
 
-export const tabs: Writable<Tab[]> = writable([]);
+export const cards: Writable<Card[]> = writable([]);

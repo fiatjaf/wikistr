@@ -1,13 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { loadNostrUser, type NostrUser } from '$lib/metadata';
-  import type { Tab, UserTab } from '$lib/types';
+  import type { Card, UserCard } from '$lib/types';
   import { next } from '$lib/utils';
 
   export let pubkey: string;
   let user: NostrUser | null = null;
 
-  export let createChild: ((tab: Tab) => void) | undefined = undefined;
+  export let createChild: ((card: Card) => void) | undefined = undefined;
 
   onMount(async () => {
     user = await loadNostrUser(pubkey);
@@ -15,7 +15,7 @@
 
   function handleClick() {
     if (createChild) {
-      createChild({ id: next(), type: 'user', data: pubkey } as UserTab);
+      createChild({ id: next(), type: 'user', data: pubkey } as UserCard);
     }
   }
 </script>

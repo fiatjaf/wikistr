@@ -4,73 +4,73 @@ export type EditorData = {
   title: string;
   summary: string;
   content: string;
-  previous: ArticleTab | undefined;
+  previous: ArticleCard | undefined;
 };
 
-export type TabType = 'welcome' | 'find' | 'article' | 'relay' | 'user' | 'settings' | 'editor' | 'new';
+export type CardType = 'welcome' | 'find' | 'article' | 'relay' | 'user' | 'settings' | 'editor' | 'new';
 
-export interface Tab {
+export interface Card {
   id: number;
-  type: TabType;
-  parent?: Tab;
-  back?: Tab;
+  type: CardType;
+  parent?: Card;
+  back?: Card;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any;
 }
 
-export type WelcomeTab = {
+export type WelcomeCard = {
   id: number;
   type: 'welcome';
-  parent?: Tab;
-  back?: Tab;
+  parent?: Card;
+  back?: Card;
 };
 
-export type SearchTab = {
+export type SearchCard = {
   id: number;
   type: 'find';
-  parent?: Tab;
-  back?: Tab;
+  parent?: Card;
+  back?: Card;
   data: string; // article title query
   preferredAuthors: string[];
 };
 
-export type ArticleTab = {
+export type ArticleCard = {
   id: number;
   type: 'article';
-  parent?: Tab;
-  back?: Tab;
+  parent?: Card;
+  back?: Card;
   data: [string, string]; // d-tag * pubkey
   relayHints: string[];
   actualEvent?: NostrEvent; // for when we already have it we can skip relays
 };
 
-export type RelayTab = {
+export type RelayCard = {
   id: number;
   type: 'relay';
-  parent?: Tab;
-  back?: Tab;
+  parent?: Card;
+  back?: Card;
   data: string; // relay url
 };
 
-export type UserTab = {
+export type UserCard = {
   id: number;
   type: 'user';
-  parent?: Tab;
-  back?: Tab;
+  parent?: Card;
+  back?: Card;
   data: string; // user pubkey
 };
 
-export type SettingsTab = {
+export type SettingsCard = {
   id: number;
   type: 'settings';
-  parent?: Tab;
-  back?: Tab;
+  parent?: Card;
+  back?: Card;
 };
 
-export type EditorTab = {
+export type EditorCard = {
   id: number;
   type: 'editor';
-  parent?: Tab;
-  back?: Tab;
+  parent?: Card;
+  back?: Card;
   data: EditorData;
 };

@@ -13,7 +13,7 @@
     getBasicUserWikiRelays,
     userWikiRelays
   } from '$lib/nostr';
-  import type { ArticleTab, Tab } from '$lib/types';
+  import type { ArticleCard, Card } from '$lib/types';
   import { addUniqueTaggedReplaceable, getTagOr, next } from '$lib/utils';
   import { subscribeAllOutbox } from '$lib/outbox';
   import ArticleListItem from '$components/ArticleListItem.svelte';
@@ -21,7 +21,7 @@
   import type { AbstractRelay } from 'nostr-tools';
   import { DEFAULT_WIKI_RELAYS } from '$lib/defaults';
 
-  export let createChild: (tab: Tab) => void;
+  export let createChild: (card: Card) => void;
   let seenCache: { [id: string]: string[] } = {};
 
   let results: Event[] = [];
@@ -58,7 +58,7 @@
       data: [getTagOr(result, 'd'), result.pubkey],
       actualEvent: result,
       relayHints: seenCache[result.id] || []
-    } as ArticleTab);
+    } as ArticleCard);
   }
 
   function restart() {

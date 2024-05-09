@@ -1,13 +1,13 @@
 <script lang="ts">
-  import type { RelayTab, Tab } from '$lib/types';
+  import type { RelayCard, Card } from '$lib/types';
   import { next, urlWithoutScheme } from '$lib/utils';
 
   export let url: string;
-  export let createChild: (tab: Tab) => void;
+  export let createChild: (card: Card) => void;
 
   function openRelay(relay: string) {
-    let relayTab: RelayTab = { id: next(), type: 'relay', data: relay };
-    createChild(relayTab);
+    let relayCard: RelayCard = { id: next(), type: 'relay', data: relay };
+    createChild(relayCard);
   }
 </script>
 
