@@ -4,7 +4,7 @@
   import type { NostrEvent } from 'nostr-tools';
 
   import type { ArticleTab, Tab } from '$lib/types';
-  import { getTagOr, next, urlWithoutScheme } from '$lib/utils';
+  import { addUniqueTaggedReplaceable, getTagOr, next, urlWithoutScheme } from '$lib/utils';
   import { _pool, wikiKind } from '$lib/nostr';
   import ArticleListItem from '$components/ArticleListItem.svelte';
 
@@ -37,8 +37,7 @@
         },
         onevent(evt) {
           tried = true;
-          results.push(evt);
-          update();
+          if (addUniqueTaggedReplaceable(results, evt)) update();
         }
       }
     );

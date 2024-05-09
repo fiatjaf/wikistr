@@ -142,3 +142,19 @@ export function unique<A>(...arrs: A[][]): A[] {
   }
   return result;
 }
+
+export function addUniqueTaggedReplaceable(haystack: NostrEvent[], needle: NostrEvent): boolean {
+  const idx = haystack.findIndex(
+    (evt) => evt.pubkey === needle.pubkey && getTagOr(evt, 'd') === getTagOr(needle, 'd')
+  );
+  if (idx === -1) {
+    haystack.push(needle);
+    return true;
+  }
+  if (haystack[idx].created_at < needle.created_at) {
+    haystack[idx] = needle;
+    return true;
+  }
+
+  return false;
+}

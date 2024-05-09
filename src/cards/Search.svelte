@@ -5,7 +5,13 @@
 
   import { _pool, wot, wikiKind, userWikiRelays } from '$lib/nostr';
   import type { ArticleTab, SearchTab, Tab } from '$lib/types';
-  import { getTagOr, next, normalizeArticleName, unique } from '$lib/utils';
+  import {
+    addUniqueTaggedReplaceable,
+    getTagOr,
+    next,
+    normalizeArticleName,
+    unique
+  } from '$lib/utils';
   import { DEFAULT_SEARCH_RELAYS } from '$lib/defaults';
   import ArticleListItem from '$components/ArticleListItem.svelte';
   import { loadRelayList } from '$lib/lists';
@@ -80,8 +86,7 @@
             openArticle(evt, undefined, true);
           }
 
-          results.push(evt);
-          update();
+          if (addUniqueTaggedReplaceable(results, evt)) update();
         },
         receivedEvent(relay, id) {
           if (!(id in seenCache)) seenCache[id] = [];
@@ -93,8 +98,7 @@
     search = _pool.subscribeMany(DEFAULT_SEARCH_RELAYS, [{ kinds: [wikiKind], search: query }], {
       id: 'find-search',
       onevent(evt) {
-        results.push(evt);
-        update();
+        if (addUniqueTaggedReplaceable(results, evt)) update();
       }
     });
   }

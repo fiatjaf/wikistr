@@ -14,7 +14,7 @@
     userWikiRelays
   } from '$lib/nostr';
   import type { ArticleTab, Tab } from '$lib/types';
-  import { getTagOr, next } from '$lib/utils';
+  import { addUniqueTaggedReplaceable, getTagOr, next } from '$lib/utils';
   import { subscribeAllOutbox } from '$lib/outbox';
   import ArticleListItem from '$components/ArticleListItem.svelte';
   import RelayItem from '$components/RelayItem.svelte';
@@ -124,8 +124,7 @@
   }
 
   function onevent(evt: NostrEvent) {
-    results.push(evt);
-    update();
+    if (addUniqueTaggedReplaceable(results, evt)) update();
   }
 
   function receivedEvent(relay: AbstractRelay, id: string) {

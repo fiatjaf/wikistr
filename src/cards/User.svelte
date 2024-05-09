@@ -4,7 +4,7 @@
   import type { NostrEvent } from 'nostr-tools';
 
   import type { ArticleTab, Tab } from '$lib/types';
-  import { getTagOr, next } from '$lib/utils';
+  import { addUniqueTaggedReplaceable, getTagOr, next } from '$lib/utils';
   import { _pool, wikiKind } from '$lib/nostr';
   import ArticleListItem from '$components/ArticleListItem.svelte';
   import UserLabel from '$components/UserLabel.svelte';
@@ -39,8 +39,7 @@
           if (seenCache[id].indexOf(relay.url) === -1) seenCache[id].push(relay.url);
         },
         onevent(evt) {
-          results.push(evt);
-          update();
+          if (addUniqueTaggedReplaceable(results, evt)) update();
         }
       }
     );
