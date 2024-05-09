@@ -129,11 +129,14 @@
     // help nostr stay by publishing articles from others into their write relays
     let to = setTimeout(async () => {
       if (event) {
-        const relays = (await loadRelayList(event.pubkey))
+        (await loadRelayList(event.pubkey))
           .filter((ri) => ri.write)
           .map((ri) => ri.url)
-          .slice(0, 3);
-        broadcast(event!, relays, 'hsw');
+          .slice(0, 3)
+          .forEach(async (url) => {
+            let relay = await _pool.ensureRelay(url);
+            relay.publish(event!);
+          });
       }
     }, 5000);
 
