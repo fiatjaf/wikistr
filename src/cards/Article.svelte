@@ -87,7 +87,10 @@
         {
           id: 'article',
           receivedEvent(relay, _id) {
-            if (seenOn.indexOf(relay.url) === -1) seenOn.push(relay.url);
+            if (seenOn.indexOf(relay.url) === -1) {
+              seenOn.push(relay.url);
+              seenOn = seenOn;
+            }
           },
           onevent(evt) {
             if (!event || event.created_at < evt.created_at) {
@@ -230,7 +233,13 @@
           <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
         </div>
         <div>
-          <a class="cursor-pointer underline" on:click={edit}>Fork</a>
+          <a class="cursor-pointer underline" on:click={edit}>
+            {#if event?.pubkey === $account?.pubkey}
+              Edit
+            {:else}
+              Fork
+            {/if}
+          </a>
           &nbsp;• &nbsp;
           <a class="cursor-pointer underline" on:click={shareCopy}>
             {#if copied}Copied!{:else}Share{/if}
