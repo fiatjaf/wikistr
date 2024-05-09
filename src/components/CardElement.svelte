@@ -32,9 +32,11 @@
   }
 
   function createChild(newChild: Card) {
-    newChild.parent = card;
     const index = $cards.findIndex((item) => item.id === card.id);
-    const newCards = $cards.slice(0, index + 1).concat(newChild);
+    const newCards = $cards
+      .slice(0, index + 1)
+      .concat(newChild)
+      .concat($cards.slice(index + 1));
     goto('/' + newCards.map((card) => toURL(card)).join('/'), {
       state: [index + 1, newChild]
     });
@@ -47,16 +49,8 @@
   }
 
   function replaceSelf(updatedCard: Card) {
-    updatedCard.parent = card.parent;
     const index = $cards.findIndex((item) => item.id === card.id);
     const newCards = $cards.slice();
-    const removedChildren = newCards.filter((item) => item.parent === card);
-    removedChildren.forEach((child) => {
-      const childIndex = newCards.indexOf(child);
-      if (childIndex !== -1) {
-        newCards.splice(childIndex, 1);
-      }
-    });
     newCards[index] = updatedCard;
     goto(
       '/' +

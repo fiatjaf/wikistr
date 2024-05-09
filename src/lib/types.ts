@@ -20,7 +20,6 @@ export type CardType =
 export interface Card {
   id: number;
   type: CardType;
-  parent?: Card;
   back?: Card;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any;
@@ -29,14 +28,12 @@ export interface Card {
 export type WelcomeCard = {
   id: number;
   type: 'welcome';
-  parent?: Card;
   back?: Card;
 };
 
 export type SearchCard = {
   id: number;
   type: 'find';
-  parent?: Card;
   back?: Card;
   data: string; // article title query
   preferredAuthors: string[];
@@ -47,7 +44,6 @@ export type SearchCard = {
 export type ArticleCard = {
   id: number;
   type: 'article';
-  parent?: Card;
   back?: Card;
   data: [string, string]; // d-tag * pubkey
   relayHints: string[];
@@ -58,7 +54,6 @@ export type ArticleCard = {
 export type RelayCard = {
   id: number;
   type: 'relay';
-  parent?: Card;
   back?: Card;
   data: string; // relay url
 };
@@ -66,7 +61,6 @@ export type RelayCard = {
 export type UserCard = {
   id: number;
   type: 'user';
-  parent?: Card;
   back?: Card;
   data: string; // user pubkey
 };
@@ -74,14 +68,12 @@ export type UserCard = {
 export type SettingsCard = {
   id: number;
   type: 'settings';
-  parent?: Card;
   back?: Card;
 };
 
 export type EditorCard = {
   id: number;
   type: 'editor';
-  parent?: Card;
   back?: Card;
   data: EditorData;
 };
