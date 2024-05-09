@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { debounce } from 'debounce';
-  import type { Event, SubCloser } from 'nostr-tools';
+  import type { AbstractRelay, Event, NostrEvent, SubCloser } from 'nostr-tools';
 
   import { _pool, wot, wikiKind, userWikiRelays } from '$lib/nostr';
   import type { ArticleCard, SearchCard, Card } from '$lib/types';
@@ -22,26 +22,51 @@
   export let card: Card;
   export let replaceSelf: (card: Card) => void;
   export let createChild: (card: Card) => void;
-  let seenCache: { [id: string]: string[] } = {};
-  let results: Event[] = [];
   let tried = false;
+  let eosed = 0;
+  let editable = false;
 
   const searchCard = card as SearchCard;
 
-  let editable = false;
-  let query = searchCard.data;
+  let query: string;
+  let seenCache: { [id: string]: string[] } = {};
+  let results: NostrEvent[] = [];
 
   // close handlers
+  let uwrcancel: () => void;
   let search: SubCloser;
-  let sub: SubCloser;
-  onMount(performSearch);
-  onDestroy(() => {
-    if (sub) sub.close();
-    if (search) search.close();
+  let subs: SubCloser[] = [];
+
+  onMount(() => {
+    query = searchCard.data;
   });
 
+  onMount(() => {
+    // we won't do any searches if we already have the results
+    if (searchCard.results) {
+      seenCache = searchCard.seenCache || {};
+      results = searchCard.results || [];
+
+      tried = true;
+      return;
+    }
+
+    performSearch();
+  });
+
+  onDestroy(destroy);
+
+  function destroy() {
+    if (uwrcancel) uwrcancel();
+    subs.forEach((sub) => sub.close());
+    if (search) search.close();
+  }
+
   async function performSearch() {
+    // cancel existing subscriptions and zero variables
+    destroy();
     tried = false;
+    eosed = 0;
     results = [];
 
     setTimeout(() => {
@@ -76,38 +101,74 @@
         .map((ri) => ri.url)
     );
 
-    sub = _pool.subscribeMany(
-      $userWikiRelays.concat(relaysFromPreferredAuthors),
-      [{ kinds: [wikiKind], '#d': [normalizeArticleName(query)], limit: 25 }],
-      {
-        id: 'find-exactmatch',
-        oneose() {
-          tried = true;
-        },
-        onevent(evt) {
-          tried = true;
+    let previouslyQueriedRelays: string[] = [];
+    uwrcancel = userWikiRelays.subscribe(async (uwr) => {
+      const relaysToUseNow = [];
 
-          if (searchCard.preferredAuthors.includes(evt.pubkey)) {
-            // we found an exact match that fits the list of preferred authors
-            // jump straight into it
-            openArticle(evt, undefined, true);
-          }
-
-          if (addUniqueTaggedReplaceable(results, evt)) update();
-        },
-        receivedEvent(relay, id) {
-          if (!(id in seenCache)) seenCache[id] = [];
-          if (seenCache[id].indexOf(relay.url) === -1) seenCache[id].push(relay.url);
+      for (let i = 0; i < uwr.length; i++) {
+        let r = uwr[i];
+        if (previouslyQueriedRelays.indexOf(r) === -1) {
+          relaysToUseNow.push(r);
+          previouslyQueriedRelays.push(r);
         }
       }
-    );
+
+      for (let i = 0; i < relaysFromPreferredAuthors.length; i++) {
+        let r = relaysFromPreferredAuthors[i];
+        if (previouslyQueriedRelays.indexOf(r) === -1) {
+          relaysToUseNow.push(r);
+          previouslyQueriedRelays.push(r);
+        }
+      }
+
+      if (relaysToUseNow.length === 0) return;
+
+      let subc = _pool.subscribeMany(
+        relaysToUseNow,
+        [{ kinds: [wikiKind], '#d': [normalizeArticleName(query)], limit: 25 }],
+        {
+          id: 'find-exactmatch',
+          onevent(evt) {
+            tried = true;
+
+            if (searchCard.preferredAuthors.includes(evt.pubkey)) {
+              // we found an exact match that fits the list of preferred authors
+              // jump straight into it
+              openArticle(evt, undefined, true);
+            }
+
+            if (addUniqueTaggedReplaceable(results, evt)) update();
+          },
+          oneose,
+          receivedEvent
+        }
+      );
+
+      subs.push(subc);
+    });
 
     search = _pool.subscribeMany(DEFAULT_SEARCH_RELAYS, [{ kinds: [wikiKind], search: query }], {
       id: 'find-search',
       onevent(evt) {
         if (addUniqueTaggedReplaceable(results, evt)) update();
-      }
+      },
+      oneose,
+      receivedEvent
     });
+
+    function oneose() {
+      eosed++;
+      if (eosed === 2) {
+        tried = true;
+        searchCard.results = results;
+        searchCard.seenCache = seenCache;
+      }
+    }
+
+    function receivedEvent(relay: AbstractRelay, id: string) {
+      if (!(id in seenCache)) seenCache[id] = [];
+      if (seenCache[id].indexOf(relay.url) === -1) seenCache[id].push(relay.url);
+    }
   }
 
   const debouncedPerformSearch = debounce(performSearch, 400);
@@ -119,7 +180,10 @@
       data: [getTagOr(result, 'd'), result.pubkey],
       relayHints: seenCache[result.id],
       actualEvent: result,
-      versions: results.filter((evt) => getTagOr(evt, 'd') === normalizeArticleName(query))
+      versions:
+        getTagOr(result, 'd') === normalizeArticleName(query)
+          ? results.filter((evt) => getTagOr(evt, 'd') === normalizeArticleName(query))
+          : undefined
     };
     if (ev?.button === 1) createChild(articleCard);
     else if (direct)
@@ -154,6 +218,10 @@
 
       let currentState = $page.state as [number, Card];
       replaceState('/' + replacementURL.join('/'), currentState[0] === index ? [] : currentState);
+
+      // update stored card state
+      searchCard.data = normalizeArticleName(query);
+      searchCard.results = undefined;
 
       // redo the query
       debouncedPerformSearch();

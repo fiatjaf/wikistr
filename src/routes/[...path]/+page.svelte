@@ -5,7 +5,7 @@
   import { cards } from '$lib/state';
   import { next, scrollCardIntoView } from '$lib/utils';
   import { normalizeURL } from 'nostr-tools/utils';
-  import type { Card } from '$lib/types';
+  import type { ArticleCard, Card, EditorCard, RelayCard, SearchCard, UserCard } from '$lib/types';
   import { decode } from 'nostr-tools/nip19';
 
   onMount(() => {
@@ -71,19 +71,19 @@
         id: next(),
         type: 'editor',
         data: { title: ditem.substring(5), summary: '', content: '' }
-      };
+      } as EditorCard;
     } else if (ditem.startsWith('npub1')) {
-      return { id: next(), type: 'user', data: decode(ditem).data as string };
+      return { id: next(), type: 'user', data: decode(ditem).data as string } as UserCard;
     } else if (
       ditem.split('.').length >= 2 ||
       ditem.startsWith('wss://') ||
       ditem.startsWith('ws://')
     ) {
-      return { id: next(), type: 'relay', data: normalizeURL(ditem) };
+      return { id: next(), type: 'relay', data: normalizeURL(ditem) } as RelayCard;
     } else if (pathPart.match(/^[\w-]+\*[a-f0-9]{64}$/)) {
-      return { id: next(), type: 'article', data: pathPart.split('*') };
+      return { id: next(), type: 'article', data: pathPart.split('*') } as ArticleCard;
     } else {
-      return { id: next(), type: 'find', data: pathPart };
+      return { id: next(), type: 'find', data: pathPart, preferredAuthors: [] } as SearchCard;
     }
   }
 </script>

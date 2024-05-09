@@ -116,13 +116,17 @@
 
   onMount(() => {
     // help nostr stay by publishing articles from others into their write relays
-    setTimeout(async () => {
-      if (event)
-        broadcast(
-          event,
-          (await loadRelayList(event.pubkey)).filter((ri) => ri.write).map((ri) => ri.url)
-        );
+    let to = setTimeout(async () => {
+      if (event) {
+        const relays = (await loadRelayList(event.pubkey))
+          .filter((ri) => ri.write)
+          .map((ri) => ri.url)
+          .slice(0, 3);
+        broadcast(event!, relays, 'hsw');
+      }
     }, 5000);
+
+    return () => clearTimeout(to);
   });
 
   onMount(() => {
@@ -188,11 +192,15 @@
     };
 
     let relays = await loadRelayList(pubkey);
-    broadcast(eventTemplate, [
-      ...(card as ArticleCard).relayHints,
-      ...relays.filter((ri) => ri.read).map((ri) => ri.url),
-      ...seenOn
-    ]);
+    broadcast(
+      eventTemplate,
+      [
+        ...(card as ArticleCard).relayHints,
+        ...relays.filter((ri) => ri.read).map((ri) => ri.url),
+        ...seenOn
+      ],
+      'like'
+    );
   }
 </script>
 
@@ -266,7 +274,7 @@
           </a>
           &nbsp;• &nbsp;
           <a class="cursor-pointer underline" on:mouseup|preventDefault={seeOthers}
-            >{nOthers} Versions</a
+            >{nOthers || ''} Versions</a
           >
         </div>
       </div>

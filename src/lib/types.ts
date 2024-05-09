@@ -40,6 +40,8 @@ export type SearchCard = {
   back?: Card;
   data: string; // article title query
   preferredAuthors: string[];
+  results?: NostrEvent[];
+  seenCache?: { [id: string]: string[] };
 };
 
 export type ArticleCard = {
