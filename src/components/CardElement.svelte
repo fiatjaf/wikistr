@@ -166,7 +166,7 @@
     {:else if card.type === 'settings'}
       <Settings />
     {:else if card.type === 'editor'}
-      <Editor {replaceSelf} data={card.data} />
+      <Editor {replaceSelf} {card} />
     {/if}
   </article>
 </div>

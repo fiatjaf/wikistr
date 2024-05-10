@@ -2,15 +2,23 @@
   import { DEFAULT_WIKI_RELAYS } from '$lib/defaults';
   import { loadRelayList } from '$lib/lists';
   import { wikiKind, account, signer, _pool } from '$lib/nostr';
-  import type { ArticleCard, EditorData, Card } from '$lib/types.ts';
+  import type { ArticleCard, Card, EditorCard, EditorData } from '$lib/types.ts';
   import { getTagOr, next, normalizeArticleName, unique, urlWithoutScheme } from '$lib/utils';
   import type { EventTemplate } from 'nostr-tools';
+  import { onMount } from 'svelte';
 
   export let replaceSelf: (card: Card) => void;
-  export let data: EditorData;
+  export let card: Card;
 
+  const editorCard = card as EditorCard;
+
+  let data: EditorData;
   let error: string | undefined;
   let targets: { url: string; status: 'pending' | 'success' | 'failure'; message?: string }[] = [];
+
+  onMount(() => {
+    data = { ...editorCard.data };
+  });
 
   async function publish() {
     targets = unique(
@@ -24,7 +32,7 @@
     let eventTemplate: EventTemplate = {
       kind: wikiKind,
       tags: [['d', normalizeArticleName(data.title)]],
-      content: data.content,
+      content: data.content.trim(),
       created_at: Math.round(Date.now() / 1000)
     };
     if (data.title !== eventTemplate.tags[0][1]) eventTemplate.tags.push(['title', data.title]);
@@ -69,40 +77,48 @@
   }
 </script>
 
-<div class="my-4 font-bold text-4xl">Creating an article</div>
-<div class="mt-2">
-  <label class="flex items-center"
-    >Title
-    <input
-      placeholder="example: Greek alphabet"
-      bind:value={data.title}
-      class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ml-2"
-    /></label
-  >
+<div class="my-4 font-bold text-4xl">
+  {#if editorCard.data.content}
+    Editing an article
+  {:else}
+    Creating an article
+  {/if}
 </div>
-<div class="mt-2">
-  <label
-    >Article
-    <textarea
-      placeholder="The **Greek alphabet** has been used to write the [[Greek language]] sincie the late 9th or early 8th century BC. The Greek alphabet is the ancestor of the [[Latin]] and [[Cyrillic]] scripts."
-      bind:value={data.content}
-      class="h-64 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-    /></label
-  >
-</div>
-<div class="mt-2">
-  <details>
-    <summary>Add a summary?</summary>
-    <label
-      >Summary
-      <textarea
-        bind:value={data.summary}
-        placeholder="The Greek alphabet is the earliest known alphabetic script to have distict letters for vowels. The Greek alphabet existed in many local variants."
-        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+{#if data}
+  <div class="mt-2">
+    <label class="flex items-center"
+      >Title
+      <input
+        placeholder="example: Greek alphabet"
+        bind:value={data.title}
+        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ml-2"
       /></label
     >
-  </details>
-</div>
+  </div>
+  <div class="mt-2">
+    <label
+      >Article
+      <textarea
+        placeholder="The **Greek alphabet** has been used to write the [[Greek language]] sincie the late 9th or early 8th century BC. The Greek alphabet is the ancestor of the [[Latin]] and [[Cyrillic]] scripts."
+        bind:value={data.content}
+        class="h-64 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+      /></label
+    >
+  </div>
+  <div class="mt-2">
+    <details>
+      <summary>Add a summary?</summary>
+      <label
+        >Summary
+        <textarea
+          bind:value={data.summary}
+          placeholder="The Greek alphabet is the earliest known alphabetic script to have distict letters for vowels. The Greek alphabet existed in many local variants."
+          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+        /></label
+      >
+    </details>
+  </div>
+{/if}
 
 <!-- Submit -->
 {#if targets.length > 0}
