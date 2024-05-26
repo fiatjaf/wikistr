@@ -22,6 +22,7 @@
   let likeStatus: 'liked' | 'disliked' | unknown;
   let canLike: boolean | undefined;
   let seenOn: string[] = [];
+  let raw = false;
 
   const articleCard = card as ArticleCard;
   const dTag = articleCard.data[0];
@@ -31,6 +32,7 @@
 
   $: title = event?.tags.find(([k]) => k === 'title')?.[1] || dTag;
   $: summary = event?.tags.find(([k]) => k === 'summary')?.[1];
+  $: rawEvent = event ? JSON.stringify(event, null, 2) : '{...}';
 
   function edit() {
     replaceSelf({
@@ -284,6 +286,10 @@
           <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
         </div>
         <div>
+          <a class="cursor-pointer underline" on:mouseup|preventDefault={() => (raw = !raw)}
+            >{#if raw}Read{:else}Raw{/if}</a
+          >
+          &nbsp;• &nbsp;
           <a class="cursor-pointer underline" on:click={edit}>
             {#if event?.pubkey === $account?.pubkey}
               Edit
@@ -304,9 +310,13 @@
     </div>
 
     <!-- Content -->
-    <div class="prose">
-      <ArticleContent {event} {createChild} />
-    </div>
+    {#if raw}
+      <div class="font-mono whitespace-pre-wrap">{rawEvent}</div>
+    {:else}
+      <div class="prose">
+        <ArticleContent {event} {createChild} />
+      </div>
+    {/if}
 
     {#if seenOn.length}
       <div class="mt-4 flex flex-wrap items-center">
