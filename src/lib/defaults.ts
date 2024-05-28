@@ -30,4 +30,4 @@ export const DEFAULT_WIKI_RELAYS = [
   'wss://relay.nostr.band'
 ];
 
-export const DEFAULT_SEARCH_RELAYS = ['wss://relay.wikifreedia.xyz'];
+export const DEFAULT_SEARCH_RELAYS = ['wss://relay.wikifreedia.xyz', 'wss://custom.fiatjaf.com'];
