@@ -147,14 +147,18 @@
       subs.push(subc);
     });
 
-    search = _pool.subscribeMany(DEFAULT_SEARCH_RELAYS, [{ kinds: [wikiKind], search: query }], {
-      id: 'find-search',
-      onevent(evt) {
-        if (addUniqueTaggedReplaceable(results, evt)) update();
-      },
-      oneose,
-      receivedEvent
-    });
+    search = _pool.subscribeMany(
+      DEFAULT_SEARCH_RELAYS,
+      [{ kinds: [wikiKind], search: query, limit: 10 }],
+      {
+        id: 'find-search',
+        onevent(evt) {
+          if (addUniqueTaggedReplaceable(results, evt)) update();
+        },
+        oneose,
+        receivedEvent
+      }
+    );
 
     function oneose() {
       eosed++;
