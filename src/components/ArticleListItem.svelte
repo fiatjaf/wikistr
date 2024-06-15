@@ -1,30 +1,18 @@
 <script lang="ts">
   import type { NostrEvent } from 'nostr-tools';
-  import MarkdownItPlainText from 'markdown-it-plain-text';
-  import MarkdownIt from 'markdown-it';
 
   import UserLabel from './UserLabel.svelte';
   import { formatDate } from '$lib/utils';
 
-  const mdTxt = new MarkdownIt().use(MarkdownItPlainText);
-
   export let openArticle: (event: NostrEvent, ev: MouseEvent) => void;
   export let event: NostrEvent;
 
-  $: plainText = parsePlainText(event.content.slice(0, 190));
-
-  function parsePlainText(markdown: string) {
-    mdTxt.render(markdown);
-
-    const parsedText = (mdTxt as any).plainText.replace(
-      /\[\[(.*?)\]\]/g,
-      (_: any, content: any) => {
-        return content;
-      }
-    );
-
-    return parsedText;
-  }
+  $: plainText = event.content
+    .slice(0, 210)
+    .replace(/\[\[(.*?)\]\]/g, (_: any, content: any) => {
+      return content;
+    })
+    .slice(0, 190);
 
   function handleClick(ev: MouseEvent) {
     openArticle(event, ev);

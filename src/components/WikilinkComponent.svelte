@@ -1,12 +1,15 @@
 <script lang="ts">
   import type { SearchCard, Card } from '$lib/types';
   import { next } from '$lib/utils';
+  import { getExtra } from 'svelte-asciidoc';
 
-  export let href: string;
-  export let title: string;
-  export let text: string;
-  export let extra: { preferredAuthors: string[]; createChild: (card: Card) => void };
-  const { preferredAuthors, createChild } = extra;
+  export let attrs: { [_: string]: string };
+
+  const { href } = attrs;
+  const {
+    preferredAuthors,
+    createChild
+  }: { preferredAuthors: string[]; createChild: (card: Card) => void } = getExtra();
 
   let wikitarget: string;
   if (href.startsWith('wikilink:')) {
@@ -22,11 +25,12 @@
   <button
     class="text-indigo-600 underline"
     title={`wikilink to: "${wikitarget}"`}
-    on:click={handleWikilinkClick}>{text}</button
+    on:click={handleWikilinkClick}><slot /></button
   >
 {:else}
-  <a target="_blank" {href} {title}>
-    {text}
+  <!-- svelte-ignore a11y-missing-attribute -->
+  <a target="_blank" {...attrs}>
+    <slot />
     <svg
       class="align-text-top h-3.5 inline pl-1"
       viewBox="0 0 24 24"

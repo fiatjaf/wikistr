@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { NostrEvent } from 'nostr-tools';
-  import SvelteMarkdown from 'svelte-markdown';
+  import SvelteAsciidoc from 'svelte-asciidoc';
   import WikilinkComponent from './WikilinkComponent.svelte';
   import type { Card } from '$lib/types';
   import { normalizeArticleName } from '$lib/utils';
@@ -22,12 +22,12 @@
     let [target, display] = content.split('|');
     display = display || target;
     target = normalizeArticleName(target);
-    return `[${display}](wikilink:${target})`;
+    return `link:wikilink:${target}[${display}]`;
   });
 </script>
 
-<SvelteMarkdown
+<SvelteAsciidoc
   source={content}
-  renderers={{ link: WikilinkComponent }}
+  naturalRenderers={{ a: WikilinkComponent }}
   extra={{ createChild, preferredAuthors: [event.pubkey, ...authorPreferredWikiAuthors] }}
 />
