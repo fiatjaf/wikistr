@@ -1,11 +1,21 @@
 <script lang="ts">
+  import ArticleContent from '$components/ArticleContent.svelte';
+  import WikilinkComponent from '$components/WikilinkComponent.svelte';
   import { DEFAULT_WIKI_RELAYS } from '$lib/defaults';
   import { loadRelayList } from '$lib/lists';
   import { wikiKind, account, signer, _pool } from '$lib/nostr';
   import type { ArticleCard, Card, EditorCard, EditorData } from '$lib/types.ts';
-  import { getTagOr, next, normalizeArticleName, unique, urlWithoutScheme } from '$lib/utils';
+  import {
+    getTagOr,
+    next,
+    normalizeArticleName,
+    turnWikilinksIntoAsciidocLinks,
+    unique,
+    urlWithoutScheme
+  } from '$lib/utils';
   import type { EventTemplate } from 'nostr-tools';
   import { onMount } from 'svelte';
+  import SvelteAsciidoc from 'svelte-asciidoc';
 
   export let replaceSelf: (card: Card) => void;
   export let card: Card;
@@ -15,6 +25,7 @@
   let data: EditorData;
   let error: string | undefined;
   let targets: { url: string; status: 'pending' | 'success' | 'failure'; message?: string }[] = [];
+  let previewing = false;
 
   onMount(() => {
     data = { ...editorCard.data };
@@ -96,14 +107,24 @@
     >
   </div>
   <div class="mt-2">
-    <label
-      >Article
-      <textarea
-        placeholder="The **Greek alphabet** has been used to write the [[Greek language]] sincie the late 9th or early 8th century BC. The Greek alphabet is the ancestor of the [[Latin]] and [[Cyrillic]] scripts."
-        bind:value={data.content}
-        class="h-64 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-      /></label
-    >
+    <!-- svelte-ignore a11y-label-has-associated-control -->
+    <label>
+      Article
+      {#if previewing}
+        <div class="prose prose-p:my-0 prose-li:my-0">
+          <SvelteAsciidoc
+            source={turnWikilinksIntoAsciidocLinks(data.content)}
+            naturalRenderers={{ a: WikilinkComponent }}
+          />
+        </div>
+      {:else}
+        <textarea
+          placeholder="The **Greek alphabet** has been used to write the [[Greek language]] sincie the late 9th or early 8th century BC. The Greek alphabet is the ancestor of the [[Latin]] and [[Cyrillic]] scripts."
+          bind:value={data.content}
+          class="h-64 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+        />
+      {/if}
+    </label>
   </div>
   <div class="mt-2">
     <details>
@@ -146,11 +167,18 @@
       {error}
     </div>
   {/if}
-  <div class="mt-2">
+  <div class="mt-2 flex justify-between">
     <button
       on:click={publish}
       class="cursor-pointer inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
       >Save</button
+    >
+    <button
+      on:click={() => {
+        previewing = !previewing;
+      }}
+      class="cursor-pointer inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
+      >{#if previewing}Edit{:else}Preview{/if}</button
     >
   </div>
 {/if}

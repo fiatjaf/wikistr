@@ -158,3 +158,12 @@ export function addUniqueTaggedReplaceable(haystack: NostrEvent[], needle: Nostr
 
   return false;
 }
+
+export function turnWikilinksIntoAsciidocLinks(content: string): string {
+  return content.replace(/\[\[(.*?)\]\]/g, (_: any, content: any) => {
+    let [target, display] = content.split('|');
+    display = display || target;
+    target = normalizeArticleName(target);
+    return `link:wikilink:${target}[${display}]`;
+  });
+}

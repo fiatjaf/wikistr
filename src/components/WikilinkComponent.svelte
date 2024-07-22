@@ -6,10 +6,13 @@
   export let attrs: { [_: string]: string };
 
   const { href } = attrs;
-  const {
-    preferredAuthors,
-    createChild
-  }: { preferredAuthors: string[]; createChild: (card: Card) => void } = getExtra();
+
+  const extra: undefined | { preferredAuthors: string[]; createChild: (card: Card) => void } =
+    getExtra();
+  const { preferredAuthors, createChild } = extra || {
+    preferredAuthors: [],
+    createChild: undefined
+  };
 
   let wikitarget: string;
   if (href.startsWith('wikilink:')) {
@@ -17,7 +20,9 @@
   }
 
   function handleWikilinkClick() {
-    createChild({ id: next(), type: 'find', data: wikitarget, preferredAuthors } as SearchCard);
+    if (createChild) {
+      createChild({ id: next(), type: 'find', data: wikitarget, preferredAuthors } as SearchCard);
+    }
   }
 </script>
 

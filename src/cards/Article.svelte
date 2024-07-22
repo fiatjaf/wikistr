@@ -310,8 +310,8 @@
       <div class="font-mono whitespace-pre-wrap">{rawEvent}</div>
     {:else if view === 'asciidoc'}
       <div class="prose whitespace-pre-wrap">{event.content}</div>
-    {:else}
-      <div class="prose">
+    {:else if view === 'formatted'}
+      <div class="prose prose-p:my-0 prose-li:my-0">
         <ArticleContent {event} {createChild} />
       </div>
     {/if}
