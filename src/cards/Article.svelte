@@ -22,7 +22,7 @@
   let likeStatus: 'liked' | 'disliked' | unknown;
   let canLike: boolean | undefined;
   let seenOn: string[] = [];
-  let raw = false;
+  let view: 'formatted' | 'asciidoc' | 'raw' = 'formatted';
 
   const articleCard = card as ArticleCard;
   const dTag = articleCard.data[0];
@@ -286,10 +286,6 @@
           <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
         </div>
         <div>
-          <a class="cursor-pointer underline" on:mouseup|preventDefault={() => (raw = !raw)}
-            >{#if raw}Read{:else}Raw{/if}</a
-          >
-          &nbsp;• &nbsp;
           <a class="cursor-pointer underline" on:click={edit}>
             {#if event?.pubkey === $account?.pubkey}
               Edit
@@ -310,8 +306,10 @@
     </div>
 
     <!-- Content -->
-    {#if raw}
+    {#if view === 'raw'}
       <div class="font-mono whitespace-pre-wrap">{rawEvent}</div>
+    {:else if view === 'asciidoc'}
+      <div class="prose whitespace-pre-wrap">{event.content}</div>
     {:else}
       <div class="prose">
         <ArticleContent {event} {createChild} />
@@ -323,6 +321,13 @@
         {#each seenOn as r (r)}
           <RelayItem url={r} {createChild} />
         {/each}
+        <button
+          on:click={() => {
+            view = view === 'formatted' ? 'asciidoc' : view === 'asciidoc' ? 'raw' : 'formatted';
+          }}
+          class="font-normal text-xs px-1 py-0.5 mr-1 my-0.5 rounded cursor-pointer transition-colors bg-purple-300 hover:bg-purple-400 focus:outline-none"
+          >see {#if view === 'formatted'}asciidoc source{:else if view === 'asciidoc'}raw event{:else}formatted{/if}</button
+        >
       </div>
     {/if}
   {/if}
