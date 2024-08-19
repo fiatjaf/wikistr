@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import type { Event, EventTemplate, NostrEvent } from 'nostr-tools';
+  import { naddrEncode } from 'nostr-tools/nip19';
 
   import { account, reactionKind, _pool, wikiKind, signer } from '$lib/nostr';
   import { formatDate, getA, getTagOr, next, normalizeArticleName } from '$lib/utils';
   import type { ArticleCard, SearchCard, Card } from '$lib/types';
-  import { page } from '$app/stores';
   import UserLabel from '$components/UserLabel.svelte';
   import ArticleContent from '$components/ArticleContent.svelte';
   import { loadRelayList } from '$lib/lists';
@@ -48,7 +48,14 @@
   }
 
   function shareCopy() {
-    navigator.clipboard.writeText(`https://${$page.url.hostname}/${dTag}*${pubkey}`);
+    navigator.clipboard.writeText(
+      `https://njump.me/${naddrEncode({
+        kind: wikiKind,
+        identifier: dTag,
+        pubkey,
+        relays: seenOn
+      })}`
+    );
     copied = true;
     setTimeout(() => {
       copied = false;
