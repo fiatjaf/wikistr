@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { NostrEvent } from 'nostr-tools';
+  import type { NostrEvent } from 'nostr-tools/pure';
 
   import UserLabel from './UserLabel.svelte';
   import { formatDate } from '$lib/utils';

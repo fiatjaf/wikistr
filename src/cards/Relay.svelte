@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { debounce } from 'debounce';
-  import type { NostrEvent } from 'nostr-tools';
+  import type { NostrEvent } from 'nostr-tools/pure';
 
   import type { ArticleCard, Card } from '$lib/types';
   import { addUniqueTaggedReplaceable, getTagOr, next, urlWithoutScheme } from '$lib/utils';

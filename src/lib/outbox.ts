@@ -1,4 +1,5 @@
-import type { Filter, SubCloser, SubscribeManyParams } from 'nostr-tools';
+import type { Filter } from 'nostr-tools/filter';
+import type { SubCloser, SubscribeManyParams } from 'nostr-tools/pool';
 import { loadRelayList } from './lists';
 import { _pool } from './nostr';
 import { normalizeURL } from 'nostr-tools/utils';

@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { debounce } from 'debounce';
-  import type { AbstractRelay, Event, NostrEvent, SubCloser } from 'nostr-tools';
+  import type { NostrEvent, Event } from 'nostr-tools/pure';
+  import type { AbstractRelay, NostrEvent, SubCloser } from 'nostr-tools/abstract-relay';
 
   import { _pool, wot, wikiKind, userWikiRelays } from '$lib/nostr';
   import type { ArticleCard, SearchCard, Card } from '$lib/types';

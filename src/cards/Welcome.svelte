@@ -2,6 +2,7 @@
   import { debounce } from 'debounce';
   import { onDestroy } from 'svelte';
   import type { SubCloser } from 'nostr-tools/abstract-pool';
+  import type { AbstractRelay } from 'nostr-tools/abstract-relay';
   import type { Event, NostrEvent } from 'nostr-tools/pure';
 
   import {
@@ -18,7 +19,6 @@
   import { subscribeAllOutbox } from '$lib/outbox';
   import ArticleListItem from '$components/ArticleListItem.svelte';
   import RelayItem from '$components/RelayItem.svelte';
-  import type { AbstractRelay } from 'nostr-tools';
   import { DEFAULT_WIKI_RELAYS } from '$lib/defaults';
 
   export let createChild: (card: Card) => void;

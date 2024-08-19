@@ -1,4 +1,4 @@
-import type { NostrEvent } from 'nostr-tools';
+import type { NostrEvent } from 'nostr-tools/pure';
 import LRUCache from 'mnemonist/lru-cache';
 import type { CacheMap } from 'dataloader';
 

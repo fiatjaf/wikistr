@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
-  import type { Event, EventTemplate, NostrEvent } from 'nostr-tools';
+  import type { Event, EventTemplate, NostrEvent } from 'nostr-tools/pure';
   import { naddrEncode } from 'nostr-tools/nip19';
 
   import { account, reactionKind, _pool, wikiKind, signer } from '$lib/nostr';

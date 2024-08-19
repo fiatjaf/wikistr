@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { NostrEvent } from 'nostr-tools';
+  import type { NostrEvent } from 'nostr-tools/pure';
   import SvelteAsciidoc from 'svelte-asciidoc';
   import WikilinkComponent from './WikilinkComponent.svelte';
   import type { Card } from '$lib/types';

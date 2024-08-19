@@ -1,4 +1,8 @@
 <script lang="ts">
+  import type { EventTemplate } from 'nostr-tools/pure';
+  import { onMount } from 'svelte';
+  import SvelteAsciidoc from 'svelte-asciidoc';
+
   import ArticleContent from '$components/ArticleContent.svelte';
   import WikilinkComponent from '$components/WikilinkComponent.svelte';
   import { DEFAULT_WIKI_RELAYS } from '$lib/defaults';
@@ -13,9 +17,6 @@
     unique,
     urlWithoutScheme
   } from '$lib/utils';
-  import type { EventTemplate } from 'nostr-tools';
-  import { onMount } from 'svelte';
-  import SvelteAsciidoc from 'svelte-asciidoc';
 
   export let replaceSelf: (card: Card) => void;
   export let card: Card;
