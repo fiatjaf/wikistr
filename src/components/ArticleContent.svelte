@@ -21,6 +21,7 @@
 </script>
 
 <SvelteAsciidoc
+  supportMarkdownTransition={event.created_at < 1724114682}
   source={content}
   naturalRenderers={{ a: WikilinkComponent }}
   extra={{ createChild, preferredAuthors: [event.pubkey, ...authorPreferredWikiAuthors] }}
