@@ -33,6 +33,6 @@
     "idb-keyval": "^6.2.1",
     "mnemonist": "^0.39.8",
     "nostr-tools": "^2.7.2",
-    "svelte-asciidoc": "0.0.6"
+    "svelte-asciidoc": "^0.0.8"
   }
 }
