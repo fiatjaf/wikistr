@@ -22,12 +22,14 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
 <div
-  class="inline-flex items-center h-3"
+  class="inline-flex items-center h-3 max-w-[45%]"
   class:cursor-pointer={!!createChild}
   on:click={handleClick}
 >
   {#if user?.image}
     <img src={user.image} class="h-full ml-1" alt="user avatar" />&nbsp;
   {/if}
-  <span class="text-gray-600 font-[600]" title={user?.npub}>{user?.shortName || pubkey}</span>
+  <span class="text-gray-600 font-[600] text-ellipsis truncate" title={user?.npub}
+    >{user?.shortName || pubkey}</span
+  >
 </div>

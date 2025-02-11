@@ -29,8 +29,8 @@
       ? event.tags.find((e) => e[0] == 'title')?.[1]
       : event.tags.find((e) => e[0] == 'd')?.[1]}
   </h1>
-  <p class="text-xs">
-    by <UserLabel pubkey={event.pubkey} />
+  <p class="text-xs my-1">
+    by <span class="-ml-1"><UserLabel pubkey={event.pubkey} /></span>
     {formatDate(event.created_at)}
   </p>
   <p class="text-xs text-wrap break-words whitespace-pre-wrap">

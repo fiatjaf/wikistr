@@ -1,4 +1,13 @@
-/* Write your global styles here, in PostCSS syntax */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased text-gray-900 bg-gray-50;
+  }
+
+  body {
+    @apply min-h-screen;
+  }
+}

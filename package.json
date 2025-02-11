@@ -1,6 +1,6 @@
 {
   "name": "wikistr",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": true,
   "devDependencies": {
     "@sveltejs/adapter-auto": "^3.2.0",
@@ -33,6 +33,7 @@
     "idb-keyval": "^6.2.1",
     "mnemonist": "^0.39.8",
     "nostr-tools": "^2.7.2",
-    "svelte-asciidoc": "^0.0.8"
+    "svelte-asciidoc": "^0.0.8",
+    "tailwind-scrollbar": "^3.1.0"
   }
 }
