@@ -2,7 +2,8 @@
   import { onDestroy, onMount } from 'svelte';
   import { debounce } from 'debounce';
   import type { NostrEvent, Event } from 'nostr-tools/pure';
-  import type { AbstractRelay, NostrEvent, SubCloser } from 'nostr-tools/abstract-relay';
+  import type { AbstractRelay } from 'nostr-tools/abstract-relay';
+  import type { SubCloser } from 'nostr-tools/abstract-pool';
 
   import { _pool, wot, wikiKind, userWikiRelays } from '$lib/nostr';
   import type { ArticleCard, SearchCard, Card } from '$lib/types';
@@ -10,7 +11,7 @@
     addUniqueTaggedReplaceable,
     getTagOr,
     next,
-    normalizeArticleName,
+    normalizeIdentifier,
     unique
   } from '$lib/utils';
   import { DEFAULT_SEARCH_RELAYS } from '$lib/defaults';
@@ -76,7 +77,7 @@
 
     const update = debounce(() => {
       // sort by exact matches first, then by wotness
-      let normalizedIdentifier = normalizeArticleName(query);
+      let normalizedIdentifier = normalizeIdentifier(query);
       results = results.sort((a, b) => {
         if (
           getTagOr(a, 'd') === normalizedIdentifier &&
@@ -126,7 +127,7 @@
 
       let subc = _pool.subscribeMany(
         relaysToUseNow,
-        [{ kinds: [wikiKind], '#d': [normalizeArticleName(query)], limit: 25 }],
+        [{ kinds: [wikiKind], '#d': [normalizeIdentifier(query)], limit: 25 }],
         {
           id: 'find-exactmatch',
           onevent(evt) {
@@ -186,8 +187,8 @@
       relayHints: seenCache[result.id],
       actualEvent: result,
       versions:
-        getTagOr(result, 'd') === normalizeArticleName(query)
-          ? results.filter((evt) => getTagOr(evt, 'd') === normalizeArticleName(query))
+        getTagOr(result, 'd') === normalizeIdentifier(query)
+          ? results.filter((evt) => getTagOr(evt, 'd') === normalizeIdentifier(query))
           : undefined
     };
     if (ev?.button === 1) createChild(articleCard);
@@ -225,7 +226,7 @@
       replaceState('/' + replacementURL.join('/'), currentState[0] === index ? [] : currentState);
 
       // update stored card state
-      searchCard.data = normalizeArticleName(query);
+      searchCard.data = normalizeIdentifier(query);
       searchCard.results = undefined;
 
       // redo the query
@@ -235,7 +236,7 @@
 </script>
 
 <div class="mt-2 font-bold text-4xl">
-  <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   "<span
     on:dblclick={startEditing}
     on:blur={finishedEditing}

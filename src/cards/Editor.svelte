@@ -3,7 +3,6 @@
   import { onMount } from 'svelte';
   import SvelteAsciidoc from 'svelte-asciidoc';
 
-  import ArticleContent from '$components/ArticleContent.svelte';
   import WikilinkComponent from '$components/WikilinkComponent.svelte';
   import { DEFAULT_WIKI_RELAYS } from '$lib/defaults';
   import { loadRelayList } from '$lib/lists';
@@ -12,7 +11,7 @@
   import {
     getTagOr,
     next,
-    normalizeArticleName,
+    normalizeIdentifier,
     turnWikilinksIntoAsciidocLinks,
     unique,
     urlWithoutScheme
@@ -43,7 +42,7 @@
 
     let eventTemplate: EventTemplate = {
       kind: wikiKind,
-      tags: [['d', normalizeArticleName(data.title)]],
+      tags: [['d', normalizeIdentifier(data.title)]],
       content: data.content.trim(),
       created_at: Math.round(Date.now() / 1000)
     };

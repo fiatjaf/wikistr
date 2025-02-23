@@ -21,7 +21,22 @@
 
   function handleWikilinkClick() {
     if (createChild) {
-      createChild({ id: next(), type: 'find', data: wikitarget, preferredAuthors } as SearchCard);
+      // Decode HTML entities: preserve double dashes and remove zero-width spaces
+      const decoded = wikitarget.replace(/&[#\w]+;/g, (match) => {
+        // Preserve double dashes
+        if (match === '&#8212;') {
+          return '--';
+        }
+
+        // Remove zero-width spaces
+        if (match === '&#8203;') {
+          return '';
+        }
+
+        return match;
+      });
+
+      createChild({ id: next(), type: 'find', data: decoded, preferredAuthors } as SearchCard);
     }
   }
 </script>
