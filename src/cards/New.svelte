@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { next, normalizeArticleName } from '$lib/utils';
+  import { next, normalizeIdentifier } from '$lib/utils';
   import type { SearchCard, Card } from '$lib/types';
 
   export let replaceNewCard: (card: Card) => void;
@@ -10,7 +10,7 @@
       const newCard: SearchCard = {
         id: next(),
         type: 'find',
-        data: normalizeArticleName(query),
+        data: normalizeIdentifier(query),
         preferredAuthors: []
       };
       replaceNewCard(newCard);

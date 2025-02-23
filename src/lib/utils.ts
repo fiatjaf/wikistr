@@ -90,8 +90,24 @@ export function getParentCard(el: HTMLElement): HTMLElement | null {
   return curr;
 }
 
-export function normalizeArticleName(input: string): string {
-  return input.trim().toLowerCase().replace(/\W/g, '-');
+export function normalizeIdentifier(name: string): string {
+  // Trim and lowercase
+  name = name.trim().toLowerCase();
+  
+  // Normalize Unicode to NFKC form
+  name = name.normalize('NFKC');
+  
+  // Convert to array of characters and map each one
+  return Array.from(name)
+    .map(char => {
+      // Check if character is letter or number using Unicode ranges
+      if (/\p{Letter}/u.test(char) || /\p{Number}/u.test(char)) {
+        return char;
+      }
+      
+      return '-';
+    })
+    .join('');
 }
 
 export function getA(event: NostrEvent) {
@@ -163,7 +179,7 @@ export function turnWikilinksIntoAsciidocLinks(content: string): string {
   return content.replace(/\[\[(.*?)\]\]/g, (_: any, content: any) => {
     let [target, display] = content.split('|');
     display = display || target;
-    target = normalizeArticleName(target);
+    target = normalizeIdentifier(target);
     return `link:wikilink:${target}[${display}]`;
   });
 }

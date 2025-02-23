@@ -4,7 +4,7 @@
   import { naddrEncode } from 'nostr-tools/nip19';
 
   import { account, reactionKind, _pool, wikiKind, signer } from '$lib/nostr';
-  import { formatDate, getA, getTagOr, next, normalizeArticleName } from '$lib/utils';
+  import { formatDate, getA, getTagOr, next, normalizeIdentifier } from '$lib/utils';
   import type { ArticleCard, SearchCard, Card } from '$lib/types';
   import UserLabel from '$components/UserLabel.svelte';
   import ArticleContent from '$components/ArticleContent.svelte';
@@ -66,7 +66,7 @@
     if (
       articleCard.back &&
       event &&
-      normalizeArticleName(articleCard.back.data) === getTagOr(event, 'd')
+      normalizeIdentifier(articleCard.back.data) === getTagOr(event, 'd')
     ) {
       // just go back
       back();
@@ -290,7 +290,6 @@
           {#if event.created_at}
             {formatDate(event.created_at)}
           {/if}
-          <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events a11y-missing-attribute -->
         </div>
         <div>
           <a class="cursor-pointer underline" on:click={edit}>
