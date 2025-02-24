@@ -183,3 +183,7 @@ export function turnWikilinksIntoAsciidocLinks(content: string): string {
     return `link:wikilink:${target}[${display}]`;
   });
 }
+
+export function appendLinkMacroToNostrLinks(content: string): string {
+  return content.replace(/nostr:/g, 'link:nostr:');
+}
