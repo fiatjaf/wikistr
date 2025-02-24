@@ -19,7 +19,7 @@
   }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   on:mouseup|preventDefault={handleClick}
   class="cursor-pointer p-4 bg-white border-2 border-stone-200 hover:bg-stone-50 rounded-lg mt-2"

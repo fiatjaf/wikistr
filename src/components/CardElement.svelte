@@ -105,7 +105,7 @@
   }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   id={`wikicard-${card.id}`}
   class="
