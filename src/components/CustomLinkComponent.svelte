@@ -15,6 +15,8 @@
   <NostrLinkComponent {attrs}>
     <slot />
   </NostrLinkComponent>
+{:else if href?.startsWith('#')}
+  <a {href} {...rest}><slot /></a>
 {:else}
   <a target="_blank" {href} {...rest}>
     <slot />
