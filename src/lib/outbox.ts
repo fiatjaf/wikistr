@@ -7,7 +7,7 @@ import { outboxFilterRelayBatch } from '@nostr/gadgets/outbox';
 export function subscribeAllOutbox(
   pubkeys: string[],
   baseFilter: Omit<Filter, 'authors'> & { limit: number },
-  params: SubscribeManyParams
+  params: any
 ): SubCloser {
   let closed = false;
   let subc: SubCloser;
@@ -32,7 +32,7 @@ export function subscribeAllOutbox(
 export function subscribeOutbox(
   pubkey: string,
   baseFilter: Omit<Filter, 'authors'> & { limit: number },
-  params: SubscribeManyParams
+  params: any
 ): SubCloser {
   let closed = false;
   let subc: SubCloser;

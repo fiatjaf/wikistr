@@ -27,7 +27,7 @@
 
   $effect(() => {
     let prevP: string[] = [];
-    let nextP = page.params.path.split('/').filter((str) => str !== '');
+    let nextP = (page.params.path || '').split('/').filter((str) => str !== '');
 
     let nextCards: Card[] = [];
     for (let n = 0; n < nextP.length; n++) {
@@ -66,7 +66,9 @@
 
   function cardFromPathPart(pathPart: string): Card {
     let ditem = decodeURIComponent(pathPart);
-    if (ditem.startsWith('edit:')) {
+    if (ditem === 'settings') {
+      return { id: next(), type: 'settings' };
+    } else if (ditem.startsWith('edit:')) {
       return {
         id: next(),
         type: 'editor',
@@ -83,7 +85,7 @@
     } else if (pathPart.match(/^[\w-]+\*[a-f0-9]{64}$/)) {
       return { id: next(), type: 'article', data: pathPart.split('*') } as ArticleCard;
     } else {
-      return { id: next(), type: 'find', data: pathPart, preferredAuthors: [] } as SearchCard;
+      return { id: next(), type: 'find', data: ditem, preferredAuthors: [], redirect: true } as SearchCard;
     }
   }
 </script>

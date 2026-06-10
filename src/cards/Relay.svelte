@@ -4,13 +4,13 @@
   import type { NostrEvent } from '@nostr/tools/pure';
   import { pool } from '@nostr/gadgets/global';
 
-  import type { ArticleCard, Card } from '$lib/types';
+  import type { ArticleCard, RelayCard, Card } from '$lib/types';
   import { addUniqueTaggedReplaceable, getTagOr, next, urlWithoutScheme } from '$lib/utils';
   import { wikiKind } from '$lib/nostr';
   import ArticleListItem from '$components/ArticleListItem.svelte';
 
   interface Props {
-    card: Card;
+    card: RelayCard;
     replaceSelf: (card: Card) => void;
     createChild: (card: Card) => void;
   }

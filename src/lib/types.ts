@@ -4,11 +4,13 @@ export type EditorData = {
   title: string;
   summary: string;
   content: string;
-  previous: ArticleCard | undefined;
+  tags?: string[];
+  previous: Card | undefined;
 };
 
 export type Card =
   | WelcomeCard
+  | RecentCard
   | NewCard
   | SearchCard
   | ArticleCard
@@ -31,6 +33,16 @@ export function serializeCardForRouter(card: Card) {
     case 'article':
       if (serialized.actualEvent)
         serialized.actualEvent = eventOutFromProxy(serialized.actualEvent);
+      if (serialized.versions)
+        serialized.versions = [...serialized.versions].map(eventOutFromProxy);
+      break;
+    case 'editor':
+      if (serialized.data && serialized.data.previous) {
+        serialized.data = {
+          ...serialized.data,
+          previous: serializeCardForRouter(serialized.data.previous)
+        };
+      }
       break;
   }
 
@@ -44,6 +56,12 @@ function eventOutFromProxy(event: NostrEvent): NostrEvent {
 export type WelcomeCard = {
   id: number;
   type: 'welcome';
+  back?: Card;
+};
+
+export type RecentCard = {
+  id: number;
+  type: 'recent';
   back?: Card;
 };
 
@@ -61,6 +79,7 @@ export type SearchCard = {
   preferredAuthors: string[];
   results?: NostrEvent[];
   seenCache?: { [id: string]: string[] };
+  redirect?: boolean;
 };
 
 export type ArticleCard = {

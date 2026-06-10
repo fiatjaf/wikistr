@@ -6,7 +6,7 @@
 
   import WikilinkComponent from './WikilinkComponent.svelte';
   import type { Card } from '$lib/types';
-  import { turnWikilinksIntoAsciidocLinks } from '$lib/utils';
+  import { turnWikilinksIntoAsciidocLinks, appendLinkMacroToNostrLinks } from '$lib/utils';
 
   interface Props {
     event: NostrEvent;
@@ -16,7 +16,7 @@
   let { event, createChild }: Props = $props();
 
   let authorPreferredWikiAuthors = $state<string[]>([]);
-  const content = turnWikilinksIntoAsciidocLinks(event.content);
+  const content = $derived(appendLinkMacroToNostrLinks(turnWikilinksIntoAsciidocLinks(event.content)));
 
   onMount(() => {
     loadWikiAuthors(event.pubkey).then((ps) => {

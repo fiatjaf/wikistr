@@ -3,7 +3,7 @@
   import debounce from 'debounce';
   import type { NostrEvent } from '@nostr/tools/pure';
 
-  import type { ArticleCard, Card } from '$lib/types';
+  import type { ArticleCard, UserCard, Card } from '$lib/types';
   import { addUniqueTaggedReplaceable, getTagOr, next } from '$lib/utils';
   import { wikiKind } from '$lib/nostr';
   import ArticleListItem from '$components/ArticleListItem.svelte';
@@ -11,7 +11,7 @@
   import { subscribeOutbox } from '$lib/outbox';
 
   interface Props {
-    card: Card;
+    card: UserCard;
     createChild: (card: Card) => void;
   }
 
@@ -37,11 +37,11 @@
         limit: 50
       },
       {
-        receivedEvent(relay, id) {
+        receivedEvent(relay: any, id: string) {
           if (!(id in seenCache)) seenCache[id] = [];
           if (seenCache[id].indexOf(relay.url) === -1) seenCache[id].push(relay.url);
         },
-        onevent(evt) {
+        onevent(evt: NostrEvent) {
           if (addUniqueTaggedReplaceable(results, evt)) update();
         }
       }

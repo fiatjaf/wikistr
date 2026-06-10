@@ -17,6 +17,7 @@ const startTime = Math.round(Date.now() / 1000);
 
 export const reactionKind = 7;
 export const wikiKind = 30818;
+export const gitPatchKind = 1617;
 
 export const signer = {
   getPublicKey: async () => {
@@ -30,6 +31,14 @@ export const signer = {
     const se: Event = await (window as any).nostr.signEvent(event);
     setAccount(se.pubkey);
     return se;
+  },
+  encrypt: async (pubkey: string, plaintext: string): Promise<string> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return await (window as any).nostr.nip04.encrypt(pubkey, plaintext);
+  },
+  decrypt: async (pubkey: string, ciphertext: string): Promise<string> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return await (window as any).nostr.nip04.decrypt(pubkey, ciphertext);
   }
 };
 
@@ -101,24 +110,51 @@ wot.subscribe(() => {});
 export const userWikiRelays = derived(
   account,
   (account, set) => {
-    account ? getBasicUserWikiRelays(account.pubkey).then(set) : set(DEFAULT_WIKI_RELAYS);
+    if (account) {
+      getBasicUserWikiRelays(account.pubkey).then(set);
+    } else {
+      let customRelays: string[] = [];
+      if (typeof window !== 'undefined') {
+        const customStored = localStorage.getItem('wikistr:custom-relays');
+        if (customStored) {
+          try {
+            customRelays = JSON.parse(customStored);
+          } catch (e) {}
+        }
+      }
+      set(unique(customRelays, DEFAULT_WIKI_RELAYS));
+    }
   },
   DEFAULT_WIKI_RELAYS
 );
 
 export async function getBasicUserWikiRelays(pubkey: string): Promise<string[]> {
-  const [rl1, rl2] = await Promise.all([
-    loadWikiRelays(pubkey).then((rl) => rl.items),
-    Promise.all((await loadWikiAuthors(pubkey)).items.map((pk) => loadRelayList(pk))).then((rll) =>
+  let customRelays: string[] = [];
+  if (typeof window !== 'undefined') {
+    const customStored = localStorage.getItem('wikistr:custom-relays');
+    if (customStored) {
+      try {
+        customRelays = JSON.parse(customStored);
+      } catch (e) {}
+    }
+  }
+
+  const [rl1, rl2, rl3] = await Promise.all([
+    loadWikiRelays(pubkey).then((rl) => rl.items).catch(() => []),
+    Promise.all((await loadWikiAuthors(pubkey).catch(() => ({ items: [] }))).items.map((pk) => loadRelayList(pk).catch(() => null))).then((rll) =>
       rll
+        .filter((rl): rl is Exclude<typeof rl, null> => rl !== null)
         .map((rl) => rl.items)
         .flat()
         .filter((ri) => ri.write)
         .map((ri) => ri.url)
-    )
+    ).catch(() => []),
+    loadRelayList(pubkey).then((rl) =>
+      rl.items.filter((ri) => ri.write).map((ri) => ri.url)
+    ).catch(() => [])
   ]);
 
-  let list = unique(rl1, rl2);
+  let list = unique(customRelays, rl1, rl2, rl3);
   if (list.length < 2) {
     list = unique(list, DEFAULT_WIKI_RELAYS);
   }

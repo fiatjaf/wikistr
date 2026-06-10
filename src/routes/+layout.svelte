@@ -16,6 +16,21 @@
   let scrollLeft: number;
   let slider: HTMLElement;
 
+  let isWelcomeCollapsed = $state(false);
+  let isRecentCollapsed = $state(false);
+  let prevCardsLength = 0;
+
+  $effect(() => {
+    if ($cards.length < 1) {
+      isWelcomeCollapsed = false;
+      isRecentCollapsed = false;
+    } else if ($cards.length >= 1 && prevCardsLength < 1) {
+      isWelcomeCollapsed = true; // Auto-collapse when first column is opened
+      isRecentCollapsed = true;
+    }
+    prevCardsLength = $cards.length;
+  });
+
   onMount(() => {
     document.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mouseup', onMouseUp);
@@ -68,8 +83,18 @@
 </svelte:head>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="flex overflow-x-scroll pb-2" draggable="false" bind:this={slider}>
-  <CardElement card={{ type: 'welcome', id: -1 }} />
+<div class="flex flex-col sm:flex-row sm:overflow-x-scroll pb-2" draggable="false" bind:this={slider}>
+  <CardElement 
+    card={{ type: 'welcome', id: -1 }} 
+    collapsed={$cards.length >= 1 && isWelcomeCollapsed}
+    onToggleCollapse={() => isWelcomeCollapsed = !isWelcomeCollapsed}
+  />
+
+  <CardElement 
+    card={{ type: 'recent', id: -2 }} 
+    collapsed={$cards.length >= 1 && isRecentCollapsed}
+    onToggleCollapse={() => isRecentCollapsed = !isRecentCollapsed}
+  />
 
   {#each $cards as card (card.id)}
     <CardElement {card} />
@@ -77,6 +102,4 @@
 
   <!-- this is just empty -->
   {@render children?.()}
-
-  <CardElement card={{ type: 'new', id: -1 }} />
 </div>
